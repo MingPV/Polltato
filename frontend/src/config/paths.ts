@@ -22,6 +22,11 @@ export const paths = {
     getHref: () => '/order',
   },
 
+  socketDemo: {
+    path: '/socket-demo',
+    getHref: () => '/socket-demo',
+  },
+
   app: {
     root: {
       path: '/app',
@@ -30,14 +35,6 @@ export const paths = {
     dashboard: {
       path: '',
       getHref: () => '/app',
-    },
-    discussions: {
-      path: 'discussions',
-      getHref: () => '/app/discussions',
-    },
-    discussion: {
-      path: 'discussions/:discussionId',
-      getHref: (id: string) => `/app/discussions/${id}`,
     },
     users: {
       path: 'users',

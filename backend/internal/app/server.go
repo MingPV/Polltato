@@ -1,8 +1,11 @@
 package app
 
 import (
+	"io"
 	"log"
+	"time"
 
+	"github.com/MingPV/Polltato/internal/realtime"
 	"github.com/MingPV/Polltato/pkg/database"
 	"github.com/MingPV/Polltato/utils"
 )
@@ -21,27 +24,35 @@ func Start() {
 		log.Fatalf("❌ Failed to setup REST server: %v", err)
 	}
 
-	// Setup gRPC server
-	grpcServer, err := SetupGrpcServer(db, cfg)
-	if err != nil {
-		log.Fatalf("❌ Failed to setup gRPC server: %v", err)
-	}
+	chatSocket := realtime.NewChatSocketServer()
+	// go-socket.io only runs namespace handlers (OnConnect, OnEvent) from serveConn,
+	// which is started by Server.Serve() reading engine sessions from connChan.
+	// ServeHTTP alone handles Engine.IO polling responses but never consumes connChan.
+	go func() {
+		if err := chatSocket.Serve(); err != nil && err != io.EOF {
+			log.Printf("Socket.IO Serve exited: %v", err)
+		}
+	}()
 
-	// Start REST and gRPC servers
-	go utils.StartRestServer(restApp, cfg)
-	go utils.StartGrpcServer(grpcServer, cfg)
+	// Start REST + Socket.IO (shared HTTP) and gRPC servers
+	httpSrv := utils.StartRestServer(restApp, cfg, chatSocket)
 
 	// Graceful shutdown listener
 	utils.WaitForShutdown([]func(){
 		func() {
-			log.Println("Shutting down REST server...")
-			if err := restApp.Shutdown(); err != nil {
-				log.Printf("Error shutting down REST server: %v", err)
+			// Fast path: Close() drops the listener and active connections (including
+			// Engine.IO long-polls). Graceful Shutdown can wait up to ~pingTimeout otherwise.
+			// Brief sleep avoids racing engineio newSession sends onto a closed connChan.
+			log.Println("Shutting down HTTP (REST + Socket.IO)...")
+			if err := httpSrv.Close(); err != nil {
+				log.Printf("HTTP Close: %v", err)
 			}
-		},
-		func() {
-			log.Println("Shutting down gRPC server...")
-			grpcServer.GracefulStop()
+			time.Sleep(150 * time.Millisecond)
+
+			log.Println("Shutting down Socket.IO engine...")
+			if err := chatSocket.Close(); err != nil {
+				log.Printf("Error closing Socket.IO: %v", err)
+			}
 		},
 		func() {
 			if err := database.Close(); err != nil {

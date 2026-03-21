@@ -40,16 +40,3 @@ export type Team = Entity<{
   name: string;
   description: string;
 }>;
-
-export type Discussion = Entity<{
-  title: string;
-  body: string;
-  teamId: string;
-  author: User;
-}>;
-
-export type Comment = Entity<{
-  body: string;
-  discussionId: string;
-  author: User;
-}>;

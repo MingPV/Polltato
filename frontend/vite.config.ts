@@ -7,6 +7,10 @@ import viteTsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   base: './',
+  // socket.io-client 1.x / engine.io-client expect Node's `global` (browser has `globalThis` only)
+  define: {
+    global: 'globalThis',
+  },
   plugins: [react(), viteTsconfigPaths()],
   server: {
     port: 3000,

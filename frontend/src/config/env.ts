@@ -3,6 +3,8 @@ import * as z from 'zod';
 const createEnv = () => {
   const EnvSchema = z.object({
     API_URL: z.string(),
+    /** Base URL for Socket.IO (no path); default matches local Go server APP_PORT 8000 */
+    SOCKET_URL: z.string().optional().default('http://localhost:8000'),
     ENABLE_API_MOCKING: z
       .string()
       .refine((s) => s === 'true' || s === 'false')

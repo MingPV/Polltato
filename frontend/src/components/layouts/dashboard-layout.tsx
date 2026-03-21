@@ -1,4 +1,4 @@
-import { Home, PanelLeft, Folder, Users, User2, ShoppingCart } from 'lucide-react';
+import { Home, PanelLeft, Users, User2, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useNavigation, useLocation } from 'react-router';
 
@@ -86,7 +86,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const navigation = [
     { name: 'Dashboard', to: paths.app.dashboard.getHref(), icon: Home },
     { name: 'Orders', to: paths.order.getHref(), icon: ShoppingCart },
-    { name: 'Discussions', to: paths.app.discussions.getHref(), icon: Folder },
     checkAccess({ allowedRoles: [ROLES.ADMIN] }) && {
       name: 'Users',
       to: paths.app.users.getHref(),
@@ -105,7 +104,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <NavLink
               key={item.name}
               to={item.to}
-              end={item.name !== 'Discussions'}
+              end
               className={({ isActive }) =>
                 cn(
                   'text-gray-300 hover:bg-gray-700 hover:text-white',

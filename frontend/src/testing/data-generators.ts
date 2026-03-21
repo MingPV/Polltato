@@ -4,8 +4,6 @@ import {
   randEmail,
   randParagraph,
   randUuid,
-  randPassword,
-  randCatchPhrase,
 } from '@ngneat/falso';
 
 const generateUser = () => {
@@ -43,39 +41,4 @@ export const createTeam = <T extends Partial<ReturnType<typeof generateTeam>>>(
   overrides?: T,
 ) => {
   return { ...generateTeam(), ...overrides };
-};
-
-const generateDiscussion = () => ({
-  id: randUuid(),
-  title: randCatchPhrase(),
-  body: randParagraph(),
-  createdAt: Date.now(),
-});
-
-export const createDiscussion = <
-  T extends Partial<ReturnType<typeof generateDiscussion>>,
->(
-  overrides?: T & {
-    authorId?: string;
-    teamId?: string;
-  },
-) => {
-  return { ...generateDiscussion(), ...overrides };
-};
-
-const generateComment = () => ({
-  id: randUuid(),
-  body: randParagraph(),
-  createdAt: Date.now(),
-});
-
-export const createComment = <
-  T extends Partial<ReturnType<typeof generateComment>>,
->(
-  overrides?: T & {
-    authorId?: string;
-    discussionId?: string;
-  },
-) => {
-  return { ...generateComment(), ...overrides };
 };

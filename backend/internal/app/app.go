@@ -13,17 +13,18 @@ import (
 	"github.com/MingPV/Polltato/pkg/database"
 	"github.com/MingPV/Polltato/pkg/middleware"
 	"github.com/MingPV/Polltato/pkg/routes"
+	"github.com/MingPV/Polltato/pkg/storage"
 	orderpb "github.com/MingPV/Polltato/proto/order"
 )
 
 // rest
-func SetupRestServer(db *gorm.DB, cfg *config.Config) (*fiber.App, error) {
+func SetupRestServer(db *gorm.DB, cfg *config.Config, storage storage.StorageProvider) (*fiber.App, error) {
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	// comment out Swagger when testing
-	// routes.SwaggerRoute(app)
+	routes.SwaggerRoute(app)
 	routes.RegisterPublicRoutes(app, db)
-	routes.RegisterPrivateRoutes(app, db)
+	routes.RegisterPrivateRoutes(app, db, storage)
 	routes.RegisterNotFoundRoute(app)
 	return app, nil
 }
@@ -48,10 +49,11 @@ func SetupDependencies(env string) (*gorm.DB, *config.Config, error) {
 		return nil, nil, err
 	}
 
-	if env == "test" {
-		_ = db.Migrator().DropTable(&entities.Order{}, &entities.User{})
+	if env == "test" { // Re-migrating once to fix schema issues
+		_ = db.Migrator().DropTable(&entities.Order{}, &entities.User{}, &entities.Poll{}, &entities.PollResult{})
 	}
-	if err := db.AutoMigrate(&entities.Order{}, &entities.User{}); err != nil {
+
+	if err := db.AutoMigrate(&entities.User{}, &entities.Poll{}, &entities.Order{}, &entities.PollResult{}); err != nil {
 		return nil, nil, err
 	}
 

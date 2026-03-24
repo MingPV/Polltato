@@ -22,6 +22,13 @@ type Config struct {
 
 	JWTSecret     string
 	JWTExpiration int // in seconds
+
+	// S3 Configuration
+	S3Bucket    string
+	S3Region    string
+	S3KeyID     string
+	S3SecretKey string
+	S3Endpoint  string // Optional: for Minio/LocalStack
 }
 
 func LoadConfig(env string) *Config {
@@ -48,6 +55,11 @@ func LoadConfig(env string) *Config {
 		DBName:        getEnv("DB_NAME", "test"),
 		JWTSecret:     getEnv("JWT_SECRET", "changeme"),
 		JWTExpiration: jwtExp,
+		S3Bucket:      getEnv("S3_BUCKET", getEnv("S3Bucket", "")),
+		S3Region:      getEnv("S3_REGION", getEnv("S3Region", "us-east-1")),
+		S3KeyID:       getEnv("S3_ACCESS_KEY", getEnv("S3KeyID", getEnv("AWS_ACCESS_KEY_ID", ""))),
+		S3SecretKey:   getEnv("S3_SECRET_KEY", getEnv("AWS_SECRET_ACCESS_KEY", "")),
+		S3Endpoint:    getEnv("S3_ENDPOINT", ""),
 	}
 
 	cfg.DatabaseDSN = fmt.Sprintf(

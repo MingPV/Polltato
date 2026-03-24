@@ -120,7 +120,7 @@ func (h *HttpOrderHandler) PatchOrder(c *fiber.Ctx) error {
 // @Tags orders
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} response.MessageResponse
+// @Success 200 {object} responses.MessageResponse
 // @Router /orders/{id} [delete]
 func (h *HttpOrderHandler) DeleteOrder(c *fiber.Ctx) error {
 	id := c.Params("id")

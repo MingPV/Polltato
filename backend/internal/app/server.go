@@ -7,6 +7,7 @@ import (
 
 	"github.com/MingPV/Polltato/internal/realtime"
 	"github.com/MingPV/Polltato/pkg/database"
+	"github.com/MingPV/Polltato/pkg/storage"
 	"github.com/MingPV/Polltato/utils"
 )
 
@@ -18,8 +19,20 @@ func Start() {
 		log.Fatalf("❌ Failed to setup dependencies: %v", err)
 	}
 
+	// Setup S3 storage
+	s3Storage, err := storage.NewS3Provider(
+		cfg.S3Bucket,
+		cfg.S3Region,
+		cfg.S3KeyID,
+		cfg.S3SecretKey,
+		cfg.S3Endpoint,
+	)
+	if err != nil {
+		log.Printf("⚠️ Failed to setup S3 storage: %v. Some features may not work.", err)
+	}
+
 	// Setup REST server
-	restApp, err := SetupRestServer(db, cfg)
+	restApp, err := SetupRestServer(db, cfg, s3Storage)
 	if err != nil {
 		log.Fatalf("❌ Failed to setup REST server: %v", err)
 	}

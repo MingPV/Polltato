@@ -39,14 +39,7 @@ func RegisterPublicRoutes(app fiber.Router, db *gorm.DB) {
 	authGroup.Post("/signin", userHandler.Login)
 	authGroup.Post("/signout", userHandler.Logout)
 
-	// User routes
-	userGroup := api.Group("/users")
-	userGroup.Get("/", userHandler.FindAllUsers)
-	userGroup.Get("/:id", userHandler.FindUserByID)
-	userGroup.Patch("/:id", userHandler.PatchUser)
-	userGroup.Delete("/:id", userHandler.DeleteUser)
-
-	// Order routes
+	// Order routes (leaving as public for now if you want, or I can move them too)
 	orderGroup := api.Group("/orders")
 	orderGroup.Get("/", orderHandler.FindAllOrders)
 	orderGroup.Get("/:id", orderHandler.FindOrderByID)

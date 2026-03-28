@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('profile', async ({ page }) => {
   // update user:
-  await page.goto('/app');
+  await page.goto('/app/profile');
   await page.getByRole('button', { name: 'Open user menu' }).click();
   await page.getByRole('menuitem', { name: 'Your Profile' }).click();
   await page.getByRole('button', { name: 'Update Profile' }).click();

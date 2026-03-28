@@ -17,11 +17,6 @@ export const paths = {
     },
   },
 
-  order: {
-    path: '/order',
-    getHref: () => '/order',
-  },
-
   socketDemo: {
     path: '/socket-demo',
     getHref: () => '/socket-demo',
@@ -45,10 +40,6 @@ export const paths = {
   app: {
     root: {
       path: '/app',
-      getHref: () => '/app',
-    },
-    dashboard: {
-      path: '',
       getHref: () => '/app',
     },
     users: {

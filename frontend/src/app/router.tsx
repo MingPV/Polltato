@@ -1,6 +1,6 @@
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 
 import { paths } from '@/config/paths';
@@ -39,20 +39,6 @@ export const createAppRouter = (queryClient: QueryClient) =>
       lazy: () => import('./routes/auth/signin').then(convert(queryClient)),
     },
     {
-      path: paths.order.path,
-      element: (
-        <ProtectedRoute>
-          <Outlet />
-        </ProtectedRoute>
-      ),
-      children: [
-        {
-          index: true,
-          lazy: () => import('./routes/order').then(convert(queryClient)),
-        },
-      ],
-    },
-    {
       path: paths.socketDemo.path,
       element: (
         <ProtectedRoute>
@@ -88,17 +74,16 @@ export const createAppRouter = (queryClient: QueryClient) =>
       ErrorBoundary: AppRootErrorBoundary,
       children: [
         {
+          index: true,
+          element: <Navigate to={paths.myPoll.getHref()} replace />,
+        },
+        {
           path: paths.app.users.path,
           lazy: () => import('./routes/app/users').then(convert(queryClient)),
         },
         {
           path: paths.app.profile.path,
           lazy: () => import('./routes/app/profile').then(convert(queryClient)),
-        },
-        {
-          path: paths.app.dashboard.path,
-          lazy: () =>
-            import('./routes/app/dashboard').then(convert(queryClient)),
         },
       ],
     },

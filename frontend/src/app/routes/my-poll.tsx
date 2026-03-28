@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { IoMdCopy } from 'react-icons/io';
 import { IoMdDownload } from 'react-icons/io';
-import { useNavigate } from 'react-router';
+import { IoLogOutOutline } from 'react-icons/io5';
+import { useLocation, useNavigate } from 'react-router';
 
 import { Head } from '@/components/seo';
 import { Button } from '@/components/ui/button';
 import { paths } from '@/config/paths';
+import { useSignout } from '@/lib/auth';
 
 const mockPolls = [
   {
@@ -32,7 +34,12 @@ const mockPolls = [
 
 const MyPollRoute = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [expandedPollIds, setExpandedPollIds] = useState<string[]>([]);
+  const signout = useSignout({
+    onSuccess: () =>
+      navigate(paths.auth.signin.getHref(location.pathname), { replace: true }),
+  });
 
   return (
     <>
@@ -51,12 +58,24 @@ const MyPollRoute = () => {
                 Manage, edit, and track your polls.
               </p>
             </div>
-            <Button
-              onClick={() => navigate(paths.pollCreate.getHref())}
-              className="rounded-full bg-[#6f3f23] px-7 text-white hover:bg-[#5d331c]"
-            >
-              + Create Poll
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                isLoading={signout.isPending}
+                onClick={() => signout.mutate({})}
+                className="rounded-full border-[#d6b695] bg-[#fff8ee] px-6 text-[#6b4d3a] hover:bg-[#f7ebdb]"
+                icon={<IoLogOutOutline className="text-lg" aria-hidden />}
+              >
+                Sign out
+              </Button>
+              <Button
+                onClick={() => navigate(paths.pollCreate.getHref())}
+                className="rounded-full bg-[#6f3f23] px-7 text-white hover:bg-[#5d331c]"
+              >
+                + Create Poll
+              </Button>
+            </div>
           </div>
 
           <div className="mt-8 space-y-3">

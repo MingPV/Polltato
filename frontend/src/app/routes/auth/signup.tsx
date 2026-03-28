@@ -14,7 +14,7 @@ const SignupRoute = () => {
       <SignupForm
         onSuccess={() => {
           navigate(
-            `${redirectTo ? `${redirectTo}` : paths.app.dashboard.getHref()}`,
+            `${redirectTo ? `${redirectTo}` : paths.myPoll.getHref()}`,
             {
               replace: true,
             },

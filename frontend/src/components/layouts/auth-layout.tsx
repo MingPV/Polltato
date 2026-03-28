@@ -22,7 +22,7 @@ export const AuthLayout = ({ children, title }: LayoutProps) => {
 
   useEffect(() => {
     if (user.data) {
-      navigate(redirectTo ? redirectTo : paths.app.dashboard.getHref(), {
+      navigate(redirectTo ? redirectTo : paths.myPoll.getHref(), {
         replace: true,
       });
     }

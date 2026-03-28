@@ -12,7 +12,7 @@ const LandingRoute = () => {
 
   const handleStart = () => {
     if (user.data) {
-      navigate(paths.app.dashboard.getHref());
+      navigate(paths.myPoll.getHref());
     } else {
       navigate(paths.auth.signin.getHref());
     }

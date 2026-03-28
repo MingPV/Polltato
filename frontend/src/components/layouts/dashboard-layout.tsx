@@ -1,4 +1,4 @@
-import { Home, PanelLeft, Users, User2, ShoppingCart } from 'lucide-react';
+import { ClipboardList, PanelLeft, PlusCircle, Users, User2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useNavigation, useLocation } from 'react-router';
 
@@ -84,8 +84,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   });
   const { checkAccess } = useAuthorization();
   const navigation = [
-    { name: 'Dashboard', to: paths.app.dashboard.getHref(), icon: Home },
-    { name: 'Orders', to: paths.order.getHref(), icon: ShoppingCart },
+    { name: 'My polls', to: paths.myPoll.getHref(), icon: ClipboardList },
+    { name: 'Create poll', to: paths.pollCreate.getHref(), icon: PlusCircle },
     checkAccess({ allowedRoles: [ROLES.ADMIN] }) && {
       name: 'Users',
       to: paths.app.users.getHref(),

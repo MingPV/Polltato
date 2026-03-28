@@ -15,16 +15,17 @@ import (
 	"github.com/MingPV/Polltato/pkg/routes"
 	"github.com/MingPV/Polltato/pkg/storage"
 	orderpb "github.com/MingPV/Polltato/proto/order"
+	socketio "github.com/googollee/go-socket.io"
 )
 
 // rest
-func SetupRestServer(db *gorm.DB, cfg *config.Config, storage storage.StorageProvider) (*fiber.App, error) {
+func SetupRestServer(db *gorm.DB, cfg *config.Config, storage storage.StorageProvider, socketServer *socketio.Server) (*fiber.App, error) {
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	// comment out Swagger when testing
 	routes.SwaggerRoute(app)
-	routes.RegisterPublicRoutes(app, db)
-	routes.RegisterPrivateRoutes(app, db, storage)
+	routes.RegisterPublicRoutes(app, db, storage, socketServer)
+	routes.RegisterPrivateRoutes(app, db, storage, socketServer)
 	routes.RegisterNotFoundRoute(app)
 	return app, nil
 }

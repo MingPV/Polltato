@@ -2,6 +2,7 @@ package rest
 
 import (
 	"log"
+
 	"github.com/MingPV/Polltato/internal/poll/dto"
 	"github.com/MingPV/Polltato/internal/poll/usecase"
 	"github.com/MingPV/Polltato/pkg/apperror"
@@ -56,105 +57,23 @@ func (h *HttpPollHandler) CreatePoll(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
-// // FindAllOrders godoc
-// // @Summary Get all orders
-// // @Tags orders
-// // @Produce json
-// // @Success 200 {array} entities.Order
-// // @Router /orders [get]
-// func (h *HttpOrderHandler) FindAllOrders(c *fiber.Ctx) error {
-// 	orders, err := h.orderUseCase.FindAllOrders()
-// 	if err != nil {
-// 		return responses.Error(c, err)
-// 	}
+// GetPollByRoomID godoc
+// @Summary Get poll by Room ID
+// @Tags polls
+// @Produce json
+// @Param room_id path string true "Room ID"
+// @Success 200 {object} responses.DataResponse
+// @Router /polls/{room_id} [get]
+func (h *HttpPollHandler) GetPollByRoomID(c *fiber.Ctx) error {
+	roomID := c.Params("room_id")
+	if roomID == "" {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid room id")
+	}
 
-// 	return c.JSON(dto.ToOrderResponseList(orders))
-// }
+	response, err := h.pollUseCase.GetPollByRoomID(c.Context(), roomID)
+	if err != nil {
+		return responses.Error(c, err)
+	}
 
-// // FindOrderByID godoc
-// // @Summary Get order by ID
-// // @Tags orders
-// // @Produce json
-// // @Param id path int true "Order ID"
-// // @Success 200 {object} entities.Order
-// // @Router /orders/{id} [get]
-// func (h *HttpOrderHandler) FindOrderByID(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	orderID, err := strconv.Atoi(id)
-// 	if err != nil {
-// 		return responses.ErrorWithMessage(c, err, "invalid id")
-// 	}
-
-// 	order, err := h.orderUseCase.FindOrderByID(orderID)
-// 	if err != nil {
-// 		return responses.Error(c, err)
-// 	}
-
-// 	return c.JSON(dto.ToOrderResponse(order))
-// }
-
-// // PatchOrder godoc
-// // @Summary Update an order partially
-// // @Tags orders
-// // @Accept json
-// // @Produce json
-// // @Param id path int true "Order ID"
-// // @Param order body entities.Order true "Order update payload"
-// // @Success 200 {object} entities.Order
-// // @Router /orders/{id} [patch]
-// func (h *HttpOrderHandler) PatchOrder(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	orderID, err := strconv.Atoi(id)
-// 	if err != nil {
-// 		return responses.ErrorWithMessage(c, err, "invalid id")
-// 	}
-
-// 	var req dto.CreateOrderRequest
-// 	if err := c.BodyParser(&req); err != nil {
-// 		return responses.ErrorWithMessage(c, err, "invalid request")
-// 	}
-
-// 	order := &entities.Order{Total: req.Total}
-
-// 	msg, err := validatePatchOrder(order)
-// 	if err != nil {
-// 		return responses.ErrorWithMessage(c, err, msg)
-// 	}
-
-// 	updatedOrder, err := h.orderUseCase.PatchOrder(orderID, order)
-// 	if err != nil {
-// 		return responses.Error(c, err)
-// 	}
-
-// 	return c.JSON(dto.ToOrderResponse(updatedOrder))
-// }
-
-// // DeleteOrder godoc
-// // @Summary Delete an order by ID
-// // @Tags orders
-// // @Produce json
-// // @Param id path int true "Order ID"
-// // @Success 200 {object} response.MessageResponse
-// // @Router /orders/{id} [delete]
-// func (h *HttpOrderHandler) DeleteOrder(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	orderID, err := strconv.Atoi(id)
-// 	if err != nil {
-// 		return responses.ErrorWithMessage(c, err, "invalid id")
-// 	}
-
-// 	if err := h.orderUseCase.DeleteOrder(orderID); err != nil {
-// 		return responses.Error(c, err)
-// 	}
-
-// 	return responses.Message(c, fiber.StatusOK, "order deleted")
-// }
-
-// func validatePatchOrder(order *entities.Order) (string, error) {
-
-// 	if order.Total <= 0 {
-// 		return "total must be positive", apperror.ErrInvalidData
-// 	}
-
-// 	return "", nil
-// }
+	return responses.SuccessWithData(c, "success", response)
+}

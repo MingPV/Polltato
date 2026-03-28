@@ -272,6 +272,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/polls/{room_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Get poll by Room ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.DataResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "produces": [
@@ -410,15 +438,10 @@ const docTemplate = `{
         "dto.CreatePollRequest": {
             "type": "object",
             "required": [
-                "allow_customer_choice",
                 "choices",
-                "is_multi",
                 "poll_name"
             ],
             "properties": {
-                "allow_customer_choice": {
-                    "type": "boolean"
-                },
                 "choices": {
                     "type": "array",
                     "items": {
@@ -430,23 +453,20 @@ const docTemplate = `{
                 },
                 "poll_name": {
                     "type": "string"
-                },
-                "userID": {
-                    "type": "string"
                 }
             }
         },
         "dto.PollResponse": {
             "type": "object",
             "properties": {
-                "allow_customer_choice": {
-                    "type": "boolean"
-                },
                 "choices": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.PollResultResponse"
                     }
+                },
+                "create_time": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -461,6 +481,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "room_id": {
+                    "type": "string"
+                },
+                "total_votes": {
+                    "type": "integer"
+                },
+                "update_time": {
                     "type": "string"
                 }
             }
@@ -504,6 +530,16 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "responses.DataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

@@ -9,6 +9,7 @@ import (
 	"github.com/MingPV/Polltato/internal/poll/repository"
 	"github.com/MingPV/Polltato/pkg/storage"
 	"github.com/google/uuid"
+	socketio "github.com/googollee/go-socket.io"
 	"gorm.io/gorm"
 )
 
@@ -18,11 +19,12 @@ type PollService struct {
 	pollResultRepo repository.PollResultRepository
 	storage        storage.StorageProvider
 	db             *gorm.DB
+	socketServer   *socketio.Server
 }
 
 // Init OrderService function
-func NewPollService(pollRepo repository.PollRepository, pollResultRepo repository.PollResultRepository, storage storage.StorageProvider, db *gorm.DB) PollUseCase {
-	return &PollService{pollRepo: pollRepo, pollResultRepo: pollResultRepo, storage: storage, db: db}
+func NewPollService(pollRepo repository.PollRepository, pollResultRepo repository.PollResultRepository, storage storage.StorageProvider, db *gorm.DB, socketServer *socketio.Server) PollUseCase {
+	return &PollService{pollRepo: pollRepo, pollResultRepo: pollResultRepo, storage: storage, db: db, socketServer: socketServer}
 }
 
 // PollService Methods - 1 create
@@ -59,13 +61,12 @@ func (s *PollService) CreatePoll(ctx context.Context, req *dto.CreatePollRequest
 		pollResultRepo := s.pollResultRepo.WithTx(tx)
 
 		poll = entities.Poll{
-			PollName:            req.PollName,
-			IsMulti:             req.IsMulti,
-			AllowCustomerChoice: req.AllowCustomerChoice,
-			RoomID:              roomID,
-			UserID:              req.UserID,
-			QRCodeImageKey:      key,
-			Version:             1,
+			PollName:       req.PollName,
+			IsMulti:        req.IsMulti,
+			RoomID:         roomID,
+			UserID:         req.UserID,
+			QRCodeImageKey: key,
+			Version:        1,
 		}
 
 		if err := pollRepo.Save(&poll); err != nil {
@@ -104,44 +105,12 @@ func (s *PollService) CreatePoll(ctx context.Context, req *dto.CreatePollRequest
 	return dto.ToPollResponse(&poll, url), nil
 }
 
-// // OrderService Methods - 2 find all
-// func (s *OrderService) FindAllOrders() ([]*entities.Order, error) {
-// 	orders, err := s.repo.FindAll()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return orders, nil
-// }
+func (s *PollService) GetPollByRoomID(ctx context.Context, roomID string) (*dto.PollResponse, error) {
+	poll, err := s.pollRepo.FindByRoomID(roomID)
+	if err != nil {
+		return nil, err
+	}
 
-// // OrderService Methods - 3 find by id
-// func (s *OrderService) FindOrderByID(id int) (*entities.Order, error) {
-// 	order, err := s.repo.FindByID(id)
-// 	if err != nil {
-// 		return &entities.Order{}, err
-// 	}
-
-// 	return order, nil
-// }
-
-// // OrderService Methods - 4 patch
-// func (s *OrderService) PatchOrder(id int, order *entities.Order) (*entities.Order, error) {
-// 	if err := s.repo.Patch(id, order); err != nil {
-// 		return nil, err
-// 	}
-
-// 	updatedOrder, err := s.repo.FindByID(id)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return updatedOrder, nil
-// }
-
-// // OrderService Methods - 5 delete
-// func (s *OrderService) DeleteOrder(id int) error {
-// 	if err := s.repo.Delete(id); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
+	url, _ := s.storage.GetURL(ctx, poll.QRCodeImageKey)
+	return dto.ToPollResponse(poll, url), nil
+}

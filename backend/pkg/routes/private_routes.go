@@ -12,11 +12,12 @@ import (
 	pollUseCase "github.com/MingPV/Polltato/internal/poll/usecase"
 	"github.com/MingPV/Polltato/pkg/storage"
 
+	socketio "github.com/googollee/go-socket.io"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB, storage storage.StorageProvider) {
+func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB, storage storage.StorageProvider, socketServer *socketio.Server) {
 
 	route := app.Group("/api/v1", middleware.JWTMiddleware())
 
@@ -27,7 +28,7 @@ func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB, storage storage.Storag
 	// Poll
 	pollRepo := pollRepository.NewGormPollRepository(db)
 	pollResultRepo := pollRepository.NewGormPollResultRepository(db)
-	pollService := pollUseCase.NewPollService(pollRepo, pollResultRepo, storage, db)
+	pollService := pollUseCase.NewPollService(pollRepo, pollResultRepo, storage, db, socketServer)
 	pollHandler := pollHandler.NewHttpPollHandler(pollService)
 
 	// Users

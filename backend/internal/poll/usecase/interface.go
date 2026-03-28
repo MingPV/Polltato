@@ -9,6 +9,7 @@ import (
 type PollUseCase interface {
 	// FindAllPolls() ([]*entities.Poll, error)
 	CreatePoll(ctx context.Context, poll *dto.CreatePollRequest) (*dto.PollResponse, error)
+	GetPollByRoomID(ctx context.Context, roomID string) (*dto.PollResponse, error)
 	// PatchPoll(id int, poll *entities.Poll) (*entities.Poll, error)
 	// DeletePoll(id int) error
 	// FindPollByID(id int) (*entities.Poll, error)

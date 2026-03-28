@@ -32,23 +32,23 @@ func Start() {
 	}
 
 	// Setup REST server
-	restApp, err := SetupRestServer(db, cfg, s3Storage)
+	pollSocket := realtime.NewPollSocketServer()
+	restApp, err := SetupRestServer(db, cfg, s3Storage, pollSocket)
 	if err != nil {
 		log.Fatalf("❌ Failed to setup REST server: %v", err)
 	}
 
-	chatSocket := realtime.NewChatSocketServer()
 	// go-socket.io only runs namespace handlers (OnConnect, OnEvent) from serveConn,
 	// which is started by Server.Serve() reading engine sessions from connChan.
 	// ServeHTTP alone handles Engine.IO polling responses but never consumes connChan.
 	go func() {
-		if err := chatSocket.Serve(); err != nil && err != io.EOF {
+		if err := pollSocket.Serve(); err != nil && err != io.EOF {
 			log.Printf("Socket.IO Serve exited: %v", err)
 		}
 	}()
 
 	// Start REST + Socket.IO (shared HTTP) and gRPC servers
-	httpSrv := utils.StartRestServer(restApp, cfg, chatSocket)
+	httpSrv := utils.StartRestServer(restApp, cfg, pollSocket)
 
 	// Graceful shutdown listener
 	utils.WaitForShutdown([]func(){
@@ -63,7 +63,7 @@ func Start() {
 			time.Sleep(150 * time.Millisecond)
 
 			log.Println("Shutting down Socket.IO engine...")
-			if err := chatSocket.Close(); err != nil {
+			if err := pollSocket.Close(); err != nil {
 				log.Printf("Error closing Socket.IO: %v", err)
 			}
 		},

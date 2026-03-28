@@ -33,7 +33,7 @@ func (r *GormPollRepository) FindAll() ([]*entities.Poll, error) {
 
 func (r *GormPollRepository) FindByRoomID(roomID string) (*entities.Poll, error) {
 	var poll entities.Poll
-	if err := r.db.Where("room_id = ?", roomID).First(&poll).Error; err != nil {
+	if err := r.db.Preload("PollResults").Where("room_id = ?", roomID).First(&poll).Error; err != nil {
 		return &entities.Poll{}, err
 	}
 	return &poll, nil

@@ -10,6 +10,9 @@ import {
   default as AppRoot,
   ErrorBoundary as AppRootErrorBoundary,
 } from './routes/app/root';
+import MyPollRoute from './routes/my-poll';
+import PollCreateRoute from './routes/poll-create';
+import PollDetailRoute from './routes/poll-detail';
 
 const convert = (queryClient: QueryClient) => (m: any) => {
   const { clientLoader, clientAction, default: Component, ...rest } = m;
@@ -62,6 +65,18 @@ export const createAppRouter = (queryClient: QueryClient) =>
           lazy: () => import('./routes/socket-demo').then(convert(queryClient)),
         },
       ],
+    },
+    {
+      path: paths.pollCreate.path,
+      Component: PollCreateRoute,
+    },
+    {
+      path: paths.myPoll.path,
+      Component: MyPollRoute,
+    },
+    {
+      path: paths.pollDetail.path,
+      Component: PollDetailRoute,
     },
     {
       path: paths.app.root.path,

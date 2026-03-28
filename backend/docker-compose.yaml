@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
       - "${DB_PORT}:5432"
     restart: unless-stopped
@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: ${DB_TEST_USER}
       POSTGRES_PASSWORD: ${DB_TEST_PASSWORD}
     volumes:
-      - postgres_test_data:/var/lib/postgresql/data
+      - postgres_test_data:/var/lib/postgresql
     ports:
       - "${DB_TEST_PORT}:5432"
     restart: unless-stopped
@@ -32,3 +32,7 @@ services:
 volumes:
   postgres_data:
   postgres_test_data:
+
+
+# volumes:
+#   - pgdata:/var/lib/postgresql

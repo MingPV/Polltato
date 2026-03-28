@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { AuthLayout } from '@/components/layouts/auth-layout';
+import { AuthSplitLayout } from '@/components/layouts/auth-split-layout';
 import { paths } from '@/config/paths';
 import { SigninForm } from '@/features/auth/components/signin-form';
 
@@ -10,7 +10,7 @@ const SigninRoute = () => {
   const redirectTo = searchParams.get('redirectTo');
 
   return (
-    <AuthLayout title="Sign in to your account">
+    <AuthSplitLayout title="Sign in">
       <SigninForm
         onSuccess={() => {
           navigate(
@@ -21,7 +21,7 @@ const SigninRoute = () => {
           );
         }}
       />
-    </AuthLayout>
+    </AuthSplitLayout>
   );
 };
 

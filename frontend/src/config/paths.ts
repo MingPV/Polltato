@@ -27,6 +27,21 @@ export const paths = {
     getHref: () => '/socket-demo',
   },
 
+  pollCreate: {
+    path: '/poll-create',
+    getHref: () => '/poll-create',
+  },
+
+  myPoll: {
+    path: '/my-poll',
+    getHref: () => '/my-poll',
+  },
+
+  pollDetail: {
+    path: '/poll/:pollId',
+    getHref: (pollId: string) => `/poll/${pollId}`,
+  },
+
   app: {
     root: {
       path: '/app',

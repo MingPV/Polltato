@@ -31,7 +31,7 @@ func (s *PublicRoutesTestSuite) SetupTest() {
 
 	// Setup REST server with test database (For registering routes and middleware)
 	var err error
-	s.app, err = app.SetupRestServer(s.db, s.cfg)
+	s.app, err = app.SetupRestServer(s.db, s.cfg, nil, nil)
 	s.NoError(err, "Failed to setup REST server")
 }
 

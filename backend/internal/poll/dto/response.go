@@ -1,13 +1,19 @@
 package dto
 
+import (
+	"time"
+)
+
 type PollResponse struct {
-	ID                  uint                 `json:"id"`
-	PollName            string               `json:"poll_name"`
-	IsMulti             bool                 `json:"is_multi"`
-	AllowCustomerChoice bool                 `json:"allow_customer_choice"`
-	RoomID              string               `json:"room_id"`
-	QRCodeURL           string               `json:"qrcode_url"`
-	Choices             []PollResultResponse `json:"choices"`
+	ID         uint                 `json:"id"`
+	PollName   string               `json:"poll_name"`
+	IsMulti    bool                 `json:"is_multi"`
+	RoomID     string               `json:"room_id"`
+	QRCodeURL  string               `json:"qrcode_url"`
+	Choices    []PollResultResponse `json:"choices"`
+	TotalVotes int                  `json:"total_votes"`
+	CreatedAt  time.Time            `json:"create_time"`
+	UpdatedAt  time.Time            `json:"update_time"`
 }
 
 type PollResultResponse struct {

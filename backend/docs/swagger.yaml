@@ -2,8 +2,6 @@ basePath: /api/v1
 definitions:
   dto.CreatePollRequest:
     properties:
-      allow_customer_choice:
-        type: boolean
       choices:
         items:
           type: string
@@ -12,22 +10,18 @@ definitions:
         type: boolean
       poll_name:
         type: string
-      userID:
-        type: string
     required:
-    - allow_customer_choice
     - choices
-    - is_multi
     - poll_name
     type: object
   dto.PollResponse:
     properties:
-      allow_customer_choice:
-        type: boolean
       choices:
         items:
           $ref: '#/definitions/dto.PollResultResponse'
         type: array
+      create_time:
+        type: string
       id:
         type: integer
       is_multi:
@@ -37,6 +31,10 @@ definitions:
       qrcode_url:
         type: string
       room_id:
+        type: string
+      total_votes:
+        type: integer
+      update_time:
         type: string
     type: object
   dto.PollResultResponse:
@@ -64,6 +62,13 @@ definitions:
       name:
         type: string
       password:
+        type: string
+    type: object
+  responses.DataResponse:
+    properties:
+      data: {}
+      message:
+        example: success
         type: string
     type: object
   responses.MessageResponse:
@@ -244,6 +249,24 @@ paths:
           schema:
             $ref: '#/definitions/dto.PollResponse'
       summary: Create a new poll
+      tags:
+      - polls
+  /polls/{room_id}:
+    get:
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.DataResponse'
+      summary: Get poll by Room ID
       tags:
       - polls
   /users:

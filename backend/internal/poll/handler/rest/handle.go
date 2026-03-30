@@ -77,3 +77,47 @@ func (h *HttpPollHandler) GetPollByRoomID(c *fiber.Ctx) error {
 
 	return responses.SuccessWithData(c, "success", response)
 }
+
+// PatchPoll godoc
+// @Summary Patch poll
+// @Tags polls
+// @Accept json
+// @Produce json
+// @Param room_id path string true "Room ID"
+// @Param poll body dto.PatchPollRequest true "Poll payload"
+// @Success 200 {object} dto.PollResponse
+// @Router /polls/{room_id} [patch]
+func (h *HttpPollHandler) PatchPoll(c *fiber.Ctx) error {
+	var req dto.PatchPollRequest
+
+	roomID := c.Params("room_id")
+	if roomID == "" {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid room id")
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("❌ BodyParser error: %v", err)
+		return responses.ErrorWithMessage(c, err, "invalid request")
+	}
+
+	// 1. Get and Parse UserID
+	uidLocal := c.Locals("user_id")
+	if uidLocal == nil {
+		return responses.Error(c, apperror.ErrInvalidData)
+	}
+
+	uid, err := uuid.Parse(uidLocal.(string))
+	if err != nil {
+		return responses.ErrorWithMessage(c, err, "invalid user id")
+	}
+	req.UserID = uid
+
+	// 2. Call UseCase
+	response, err := h.pollUseCase.PatchPollByRoomID(roomID, c.Context(), &req)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	// 3. Return updated poll (already a DTO)
+	return c.Status(fiber.StatusOK).JSON(response)
+}

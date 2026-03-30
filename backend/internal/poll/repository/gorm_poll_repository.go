@@ -52,7 +52,7 @@ func (r *GormPollRepository) FindByUserID(userID uuid.UUID) ([]*entities.Poll, e
 	return polls, nil
 }
 
-func (r *GormPollRepository) FindByID(id int) (*entities.Poll, error) {
+func (r *GormPollRepository) FindByID(id uint) (*entities.Poll, error) {
 	var poll entities.Poll
 	if err := r.db.First(&poll, id).Error; err != nil {
 		return &entities.Poll{}, err
@@ -60,7 +60,7 @@ func (r *GormPollRepository) FindByID(id int) (*entities.Poll, error) {
 	return &poll, nil
 }
 
-func (r *GormPollRepository) Patch(id int, poll *entities.Poll) error {
+func (r *GormPollRepository) PatchByID(id uint, poll *entities.Poll) error {
 	result := r.db.Model(&entities.Poll{}).Where("id = ?", id).Updates(poll)
 	if result.Error != nil {
 		return result.Error
@@ -71,7 +71,7 @@ func (r *GormPollRepository) Patch(id int, poll *entities.Poll) error {
 	return nil
 }
 
-func (r *GormPollRepository) Delete(id int) error {
+func (r *GormPollRepository) DeleteByID(id uint) error {
 	result := r.db.Delete(&entities.Poll{}, id)
 	if result.Error != nil {
 		return result.Error

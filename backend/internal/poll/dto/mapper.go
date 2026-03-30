@@ -19,6 +19,7 @@ func ToPollResponse(poll *entities.Poll, qrCodeURL string) *PollResponse {
 		PollName:   poll.PollName,
 		IsMulti:    poll.IsMulti,
 		RoomID:     poll.RoomID,
+		Version:    poll.Version,
 		QRCodeURL:  qrCodeURL,
 		Choices:    choices,
 		TotalVotes: totalVotes,

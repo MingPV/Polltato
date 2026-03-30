@@ -12,6 +12,7 @@ type PollResponse struct {
 	QRCodeURL  string               `json:"qrcode_url"`
 	Choices    []PollResultResponse `json:"choices"`
 	TotalVotes int                  `json:"total_votes"`
+	Version    int                  `json:"version"`
 	CreatedAt  time.Time            `json:"create_time"`
 	UpdatedAt  time.Time            `json:"update_time"`
 }

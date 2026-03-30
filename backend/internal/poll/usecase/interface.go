@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/MingPV/Polltato/internal/poll/dto"
+	"github.com/google/uuid"
 )
 
 type PollUseCase interface {
@@ -11,8 +12,6 @@ type PollUseCase interface {
 	CreatePoll(ctx context.Context, poll *dto.CreatePollRequest) (*dto.PollResponse, error)
 	GetPollByRoomID(ctx context.Context, roomID string) (*dto.PollResponse, error)
 	PatchPollByRoomID(roomID string, ctx context.Context, req *dto.PatchPollRequest) (*dto.PollResponse, error)
-	// DeletePoll(id int) error
-	// FindPollByID(id int) (*entities.Poll, error)
-	// FindPollByRoomID(roomID string) (*entities.Poll, error)
-	// FindPollsByUserID(userID uuid.UUID) ([]*entities.Poll, error)
+	Vote(ctx context.Context, roomID string, choiceIDs []int) (*dto.PollResponse, error)
+	ResetPoll(ctx context.Context, roomID string, userID uuid.UUID) (*dto.PollResponse, error)
 }

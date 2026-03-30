@@ -74,6 +74,17 @@ func (r *GormPollResultRepository) ResetVote(roomID string) error {
 	return nil
 }
 
+func (r *GormPollResultRepository) IncrementVote(roomID string, choiceIDs []int) error {
+	result := r.db.Model(&entities.PollResult{}).Where("id IN ? AND room_id = ?", choiceIDs, roomID).Update("number_vote", gorm.Expr("number_vote + ?", 1))
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 func (r *GormPollResultRepository) WithTx(tx *gorm.DB) PollResultRepository {
 	return &GormPollResultRepository{db: tx}
 }

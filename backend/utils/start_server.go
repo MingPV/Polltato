@@ -21,10 +21,25 @@ import (
 func socketIOCORS(w http.ResponseWriter, r *http.Request) {
 	raw := os.Getenv("CORS_ORIGIN")
 	if raw == "" {
-		raw = "http://localhost:3000"
+		raw = "http://localhost:3000,http://localhost:5173,http://localhost:5500,http://127.0.0.1:5500"
 	}
-	primary := strings.TrimSpace(strings.Split(raw, ",")[0])
-	w.Header().Set("Access-Control-Allow-Origin", primary)
+
+	origins := strings.Split(raw, ",")
+	requestOrigin := r.Header.Get("Origin")
+
+	// เลือกตัวแรกเป็น Default
+	allowOrigin := strings.TrimSpace(origins[0])
+
+	// ถ้า Origin ที่ขอมาอยู่ใน List ที่เราอนุญาต ให้ใช้ตัวนั้นตอบกลับทันที (Dynamic Matching)
+	for _, o := range origins {
+		trimmed := strings.TrimSpace(o)
+		if trimmed != "" && trimmed == requestOrigin {
+			allowOrigin = trimmed
+			break
+		}
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	if req := r.Header.Get("Access-Control-Request-Headers"); req != "" {

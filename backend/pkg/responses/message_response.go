@@ -10,3 +10,7 @@ type MessageResponse struct {
 func Message(c *fiber.Ctx, status int, message string) error {
 	return c.Status(status).JSON(MessageResponse{Message: message})
 }
+
+func Success(c *fiber.Ctx, message string) error {
+	return c.Status(fiber.StatusOK).JSON(MessageResponse{Message: message})
+}

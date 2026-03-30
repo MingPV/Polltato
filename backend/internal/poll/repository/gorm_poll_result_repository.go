@@ -25,7 +25,29 @@ func (r *GormPollResultRepository) FindByRoomID(roomID string) ([]*entities.Poll
 	return pollResults, nil
 }
 
-func (r *GormPollResultRepository) Patch(id int, pollResult *entities.PollResult) error {
+func (r *GormPollResultRepository) DeleteByID(id int) error {
+	result := r.db.Delete(&entities.PollResult{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *GormPollResultRepository) DeleteByManyID(ids []int) error {
+	result := r.db.Delete(&entities.PollResult{}, ids)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *GormPollResultRepository) PatchByID(id int, pollResult *entities.PollResult) error {
 	result := r.db.Model(&entities.PollResult{}).Where("id = ?", id).Updates(pollResult)
 	if result.Error != nil {
 		return result.Error
@@ -36,13 +58,18 @@ func (r *GormPollResultRepository) Patch(id int, pollResult *entities.PollResult
 	return nil
 }
 
-func (r *GormPollResultRepository) Delete(id int) error {
-	result := r.db.Delete(&entities.PollResult{}, id)
+func (r *GormPollResultRepository) PatchByRoomID(roomID string, pollResult *entities.PollResult) error {
+	result := r.db.Model(&entities.PollResult{}).Where("room_id = ?", roomID).Updates(pollResult)
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+	return nil
+}
+
+func (r *GormPollResultRepository) ResetVote(roomID string) error {
+	result := r.db.Model(&entities.PollResult{}).Where("room_id = ?", roomID).Update("number_vote", 0)
+	if result.Error != nil {
+		return result.Error
 	}
 	return nil
 }

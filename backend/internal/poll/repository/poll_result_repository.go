@@ -8,7 +8,10 @@ import (
 type PollResultRepository interface {
 	Save(pollResults []*entities.PollResult) error
 	FindByRoomID(roomID string) ([]*entities.PollResult, error)
-	Patch(id int, pollResult *entities.PollResult) error
-	Delete(id int) error
+	PatchByID(id int, pollResult *entities.PollResult) error
+	PatchByRoomID(roomID string, pollResult *entities.PollResult) error
+	DeleteByID(id int) error
+	DeleteByManyID(ids []int) error
+	ResetVote(roomID string) error
 	WithTx(tx *gorm.DB) PollResultRepository
 }

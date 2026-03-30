@@ -14,6 +14,21 @@ definitions:
     - choices
     - poll_name
     type: object
+  dto.PatchPollRequest:
+    properties:
+      added_choices:
+        items:
+          type: string
+        type: array
+      deleted_choices:
+        items:
+          type: integer
+        type: array
+      is_multi:
+        type: boolean
+      poll_name:
+        type: string
+    type: object
   dto.PollResponse:
     properties:
       choices:
@@ -267,6 +282,31 @@ paths:
           schema:
             $ref: '#/definitions/responses.DataResponse'
       summary: Get poll by Room ID
+      tags:
+      - polls
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: string
+      - description: Poll payload
+        in: body
+        name: poll
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PatchPollRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PollResponse'
+      summary: Patch poll
       tags:
       - polls
   /users:

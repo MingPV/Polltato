@@ -51,6 +51,7 @@ type PollData struct {
 }
 
 type PollChoiceResponse struct {
+	ID         uint   `json:"id"`
 	ChoiceName string `json:"choice_name"`
 	NumberVote int    `json:"number_vote"`
 }
@@ -69,7 +70,7 @@ func getPollState(conn socketio.Conn) *pollConnState {
 func parseCORSOrigins() (primary string, all []string) {
 	raw := os.Getenv("CORS_ORIGIN")
 	if raw == "" {
-		raw = "http://localhost:3000"
+		raw = "http://localhost:3000,http://localhost:5173,http://localhost:5500,http://127.0.0.1:5500"
 	}
 	for _, p := range strings.Split(raw, ",") {
 		p = strings.TrimSpace(p)
@@ -102,9 +103,26 @@ func NewPollSocketServer() *socketio.Server {
 	}
 
 	opts := &engineio.Options{
-		RequestChecker: func(*http.Request) (http.Header, error) {
+		RequestChecker: func(r *http.Request) (http.Header, error) {
 			h := http.Header{}
-			h.Set("Access-Control-Allow-Origin", primaryOrigin)
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				// Search if allowed
+				allowed := false
+				for _, a := range allowedOrigins {
+					if a == origin {
+						allowed = true
+						break
+					}
+				}
+				if allowed {
+					h.Set("Access-Control-Allow-Origin", origin)
+				} else {
+					h.Set("Access-Control-Allow-Origin", primaryOrigin)
+				}
+			} else {
+				h.Set("Access-Control-Allow-Origin", primaryOrigin)
+			}
 			h.Set("Access-Control-Allow-Credentials", "true")
 			return h, nil
 		},
@@ -149,17 +167,17 @@ func NewPollSocketServer() *socketio.Server {
 
 	// Comment ไว้ตามที่คุยกันครับ: ให้ Server เป็นคนส่ง update-poll ไปหาหน้าบ้านฝ่ายเดียว
 	/*
-	server.OnEvent("/", "update-poll", func(conn socketio.Conn, msg PollUpdateEvent) {
-		st := getPollState(conn)
-		if st.pollRoomID == "" {
-			return
-		}
+		server.OnEvent("/", "update-poll", func(conn socketio.Conn, msg PollUpdateEvent) {
+			st := getPollState(conn)
+			if st.pollRoomID == "" {
+				return
+			}
 
-		log.Printf("realtime | MSG_UPDATE  | socket=%s | type=%q | room=%q", conn.ID(), msg.Type, st.pollRoomID)
+			log.Printf("realtime | MSG_UPDATE  | socket=%s | type=%q | room=%q", conn.ID(), msg.Type, st.pollRoomID)
 
-		// Broadcast ต่อไปให้ทุกคนในห้องเดียวกันเห็น
-		server.BroadcastToRoom("/", st.pollRoomID, "update-poll", msg)
-	})
+			// Broadcast ต่อไปให้ทุกคนในห้องเดียวกันเห็น
+			server.BroadcastToRoom("/", st.pollRoomID, "update-poll", msg)
+		})
 	*/
 
 	return server
@@ -169,5 +187,6 @@ func NewPollSocketServer() *socketio.Server {
 func BroadcastPollUpdate(server *socketio.Server, roomID string, event PollUpdateEvent) {
 	fullRoomID := privateRoomPrefix + roomID
 	log.Printf("realtime | BROADCAST   | type=%q | room=%q", event.Type, fullRoomID)
+	log.Printf("realtime | BROADCAST   | event=%+v", event)
 	server.BroadcastToRoom("/", fullRoomID, "update-poll", event)
 }

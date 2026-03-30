@@ -292,6 +292,44 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Patch poll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Poll payload",
+                        "name": "poll",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PatchPollRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PollResponse"
+                        }
+                    }
+                }
             }
         },
         "/users": {
@@ -440,6 +478,29 @@
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "is_multi": {
+                    "type": "boolean"
+                },
+                "poll_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PatchPollRequest": {
+            "type": "object",
+            "properties": {
+                "added_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "deleted_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
                     }
                 },
                 "is_multi": {

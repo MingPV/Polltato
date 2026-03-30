@@ -55,3 +55,6 @@ coverage.out
 
 # If using build cache directories
 # /pkg/
+
+# Testing mocks
+MockConnect/

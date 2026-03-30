@@ -11,8 +11,8 @@ type PollRepository interface {
 	FindAll() ([]*entities.Poll, error)
 	FindByRoomID(roomID string) (*entities.Poll, error)
 	FindByUserID(userID uuid.UUID) ([]*entities.Poll, error)
-	FindByID(id int) (*entities.Poll, error)
-	Patch(id int, poll *entities.Poll) error
-	Delete(id int) error
+	FindByID(id uint) (*entities.Poll, error)
+	PatchByID(id uint, poll *entities.Poll) error
+	DeleteByID(id uint) error
 	WithTx(tx *gorm.DB) PollRepository
 }

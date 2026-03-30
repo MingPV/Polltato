@@ -12,8 +12,8 @@ import (
 	pollUseCase "github.com/MingPV/Polltato/internal/poll/usecase"
 	"github.com/MingPV/Polltato/pkg/storage"
 
-	socketio "github.com/googollee/go-socket.io"
 	"github.com/gofiber/fiber/v2"
+	socketio "github.com/googollee/go-socket.io"
 	"gorm.io/gorm"
 )
 
@@ -42,4 +42,5 @@ func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB, storage storage.Storag
 
 	// Poll
 	route.Post("/polls", pollHandler.CreatePoll)
+	route.Patch("/polls/:room_id", pollHandler.PatchPoll)
 }

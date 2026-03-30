@@ -13,5 +13,6 @@ type PollResultRepository interface {
 	DeleteByID(id int) error
 	DeleteByManyID(ids []int) error
 	ResetVote(roomID string) error
+	IncrementVote(roomID string, choiceIDs []int) error
 	WithTx(tx *gorm.DB) PollResultRepository
 }

@@ -19,6 +19,36 @@ func NewHttpPollHandler(useCase usecase.PollUseCase) *HttpPollHandler {
 	return &HttpPollHandler{pollUseCase: useCase}
 }
 
+// Vote godoc
+// @Summary Vote on a poll choices
+// @Description Vote on one or more choices in a specific poll room
+// @Tags polls
+// @Accept json
+// @Produce json
+// @Param room_id path string true "Room ID"
+// @Param vote body dto.VoteRequest true "Vote payload"
+// @Success 200 {object} responses.DataResponse{data=dto.PollResponse}
+// @Router /polls/{room_id}/votes [post]
+func (h *HttpPollHandler) Vote(c *fiber.Ctx) error {
+	var req dto.VoteRequest
+	roomID := c.Params("room_id")
+
+	if roomID == "" {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid room id")
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return responses.ErrorWithMessage(c, err, "invalid request body")
+	}
+
+	response, err := h.pollUseCase.Vote(c.Context(), roomID, req.ChoiceIDs)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	return responses.SuccessWithData(c, "success", response)
+}
+
 // CreatePoll godoc
 // @Summary Create a new poll
 // @Tags polls
@@ -119,5 +149,39 @@ func (h *HttpPollHandler) PatchPoll(c *fiber.Ctx) error {
 	}
 
 	// 3. Return updated poll (already a DTO)
-	return c.Status(fiber.StatusOK).JSON(response)
+	return responses.SuccessWithData(c, "success", response)
+}
+
+// ResetPoll godoc
+// @Summary Reset poll results
+// @Description Reset all vote counts to 0 for a specific poll. Only the owner can perform this.
+// @Tags polls
+// @Produce json
+// @Param room_id path string true "Room ID"
+// @Success 200 {object} dto.PollResponse
+// @Router /polls/{room_id}/reset [post]
+func (h *HttpPollHandler) ResetPoll(c *fiber.Ctx) error {
+	roomID := c.Params("room_id")
+	if roomID == "" {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid room id")
+	}
+
+	// 1. Get and Parse UserID
+	uidLocal := c.Locals("user_id")
+	if uidLocal == nil {
+		return responses.Error(c, apperror.ErrInvalidData)
+	}
+
+	uid, err := uuid.Parse(uidLocal.(string))
+	if err != nil {
+		return responses.ErrorWithMessage(c, err, "invalid user id")
+	}
+
+	// 2. Call UseCase
+	response, err := h.pollUseCase.ResetPoll(c.Context(), roomID, uid)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	return responses.SuccessWithData(c, "success", response)
 }

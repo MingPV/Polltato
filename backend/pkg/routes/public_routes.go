@@ -55,6 +55,7 @@ func RegisterPublicRoutes(app fiber.Router, db *gorm.DB, storage storage.Storage
 	// Poll routes (Public)
 	pollGroup := api.Group("/polls")
 	pollGroup.Get("/:room_id", pollHandler.GetPollByRoomID)
+	pollGroup.Post("/:room_id/votes", pollHandler.Vote)
 
 	// Order routes (leaving as public for now if you want, or I can move them too)
 	orderGroup := api.Group("/orders")

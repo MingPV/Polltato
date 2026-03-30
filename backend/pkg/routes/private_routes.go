@@ -43,4 +43,5 @@ func RegisterPrivateRoutes(app fiber.Router, db *gorm.DB, storage storage.Storag
 	// Poll
 	route.Post("/polls", pollHandler.CreatePoll)
 	route.Patch("/polls/:room_id", pollHandler.PatchPoll)
+	route.Post("/polls/:room_id/reset", pollHandler.ResetPoll)
 }

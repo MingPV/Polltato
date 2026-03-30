@@ -18,3 +18,7 @@ type PatchPollRequest struct {
 	AddedChoices   []string  `json:"added_choices"`
 	UserID         uuid.UUID `json:"-"`
 }
+
+type VoteRequest struct {
+	ChoiceIDs []int `json:"choice_id" validate:"required"`
+}

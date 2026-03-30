@@ -10,6 +10,7 @@ import (
 	"github.com/MingPV/Polltato/internal/poll/dto"
 	"github.com/MingPV/Polltato/internal/poll/repository"
 	"github.com/MingPV/Polltato/internal/realtime"
+	"github.com/MingPV/Polltato/pkg/apperror"
 	"github.com/MingPV/Polltato/pkg/storage"
 	"github.com/google/uuid"
 	socketio "github.com/googollee/go-socket.io"
@@ -177,7 +178,7 @@ func (s *PollService) PatchPollByRoomID(roomID string, ctx context.Context, req 
 			}
 		}
 
-		//6. set all poll results of room id to 0
+		//6. resrt all poll results of room id to 0
 		if err := pollResultRepo.ResetVote(roomID); err != nil {
 			return err
 		}
@@ -222,6 +223,135 @@ func (s *PollService) PatchPollByRoomID(roomID string, ctx context.Context, req 
 				RoomID:     pollResponse.RoomID,
 				Choices:    choices,
 				UpdateTime: pollResponse.UpdatedAt,
+			},
+		}
+		realtime.BroadcastPollUpdate(s.socketServer, roomID, event)
+	}
+
+	return response, nil
+}
+
+func (s *PollService) Vote(ctx context.Context, roomID string, choiceIDs []int) (*dto.PollResponse, error) {
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		pollResultRepo := s.pollResultRepo.WithTx(tx)
+		pollRepo := s.pollRepo.WithTx(tx)
+
+		poll, err := pollRepo.FindByRoomID(roomID)
+		if err != nil {
+			return err
+		}
+
+		pollRepo.PatchByID(poll.ID, &entities.Poll{
+			Version: poll.Version + 1,
+		})
+
+		return pollResultRepo.IncrementVote(roomID, choiceIDs)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Retrieve updated data for return and broadcast
+	poll, err := s.pollRepo.FindByRoomID(roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	url, _ := s.storage.GetURL(ctx, poll.QRCodeImageKey)
+	response := dto.ToPollResponse(poll, url)
+
+	// Broadcast update
+	if s.socketServer != nil {
+		choices := make([]realtime.PollChoiceResponse, len(response.Choices))
+		for i, c := range response.Choices {
+			choices[i] = realtime.PollChoiceResponse{
+				ID:         c.ID,
+				ChoiceName: c.ChoiceName,
+				NumberVote: c.NumberVote,
+			}
+		}
+
+		event := realtime.PollUpdateEvent{
+			From:    "participant",
+			RoomID:  roomID,
+			Type:    realtime.PollTypeUpdatePoll,
+			Version: int64(poll.Version),
+			Data: realtime.PollData{
+				ID:         poll.ID,
+				PollName:   poll.PollName,
+				IsMulti:    poll.IsMulti,
+				RoomID:     poll.RoomID,
+				Choices:    choices,
+				UpdateTime: poll.UpdatedAt,
+			},
+		}
+		realtime.BroadcastPollUpdate(s.socketServer, roomID, event)
+	}
+
+	return response, nil
+}
+
+func (s *PollService) ResetPoll(ctx context.Context, roomID string, userID uuid.UUID) (*dto.PollResponse, error) {
+	poll, err := s.pollRepo.FindByRoomID(roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	if poll.UserID != userID {
+		return nil, apperror.ErrUnauthorized
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		pollResultRepo := s.pollResultRepo.WithTx(tx)
+		pollRepo := s.pollRepo.WithTx(tx)
+
+		if err := pollResultRepo.ResetVote(roomID); err != nil {
+			return err
+		}
+
+		return pollRepo.PatchByID(poll.ID, &entities.Poll{
+			Version: poll.Version + 1,
+		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Retrieve updated data for return and broadcast
+	updatedPoll, err := s.pollRepo.FindByRoomID(roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	url, _ := s.storage.GetURL(ctx, updatedPoll.QRCodeImageKey)
+	response := dto.ToPollResponse(updatedPoll, url)
+
+	// Broadcast update
+	if s.socketServer != nil {
+		choices := make([]realtime.PollChoiceResponse, len(response.Choices))
+		for i, c := range response.Choices {
+			choices[i] = realtime.PollChoiceResponse{
+				ID:         c.ID,
+				ChoiceName: c.ChoiceName,
+				NumberVote: c.NumberVote,
+			}
+		}
+
+		event := realtime.PollUpdateEvent{
+			From:    "owner",
+			RoomID:  roomID,
+			Type:    realtime.PollTypeResetPoll,
+			Version: int64(updatedPoll.Version),
+			Data: realtime.PollData{
+				ID:         updatedPoll.ID,
+				PollName:   updatedPoll.PollName,
+				IsMulti:    updatedPoll.IsMulti,
+				RoomID:     updatedPoll.RoomID,
+				Choices:    choices,
+				UpdateTime: updatedPoll.UpdatedAt,
 			},
 		}
 		realtime.BroadcastPollUpdate(s.socketServer, roomID, event)

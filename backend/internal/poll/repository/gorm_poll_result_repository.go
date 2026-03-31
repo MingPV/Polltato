@@ -25,8 +25,8 @@ func (r *GormPollResultRepository) FindByRoomID(roomID string) ([]*entities.Poll
 	return pollResults, nil
 }
 
-func (r *GormPollResultRepository) DeleteByID(id int) error {
-	result := r.db.Delete(&entities.PollResult{}, id)
+func (r *GormPollResultRepository) DeleteByID(id int, roomID string) error {
+	result := r.db.Where("id = ? AND room_id = ?", id, roomID).Delete(&entities.PollResult{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -36,8 +36,8 @@ func (r *GormPollResultRepository) DeleteByID(id int) error {
 	return nil
 }
 
-func (r *GormPollResultRepository) DeleteByManyID(ids []int) error {
-	result := r.db.Delete(&entities.PollResult{}, ids)
+func (r *GormPollResultRepository) DeleteByManyID(roomID string, ids []int) error {
+	result := r.db.Where("id IN ? AND room_id = ?", ids, roomID).Delete(&entities.PollResult{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -47,8 +47,16 @@ func (r *GormPollResultRepository) DeleteByManyID(ids []int) error {
 	return nil
 }
 
-func (r *GormPollResultRepository) PatchByID(id int, pollResult *entities.PollResult) error {
-	result := r.db.Model(&entities.PollResult{}).Where("id = ?", id).Updates(pollResult)
+func (r *GormPollResultRepository) DeleteByRoomID(roomID string) error {
+	result := r.db.Where("room_id = ?", roomID).Delete(&entities.PollResult{})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (r *GormPollResultRepository) PatchByID(id int, roomID string, pollResult *entities.PollResult) error {
+	result := r.db.Model(&entities.PollResult{}).Where("id = ? AND room_id = ?", id, roomID).Updates(pollResult)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -81,6 +89,18 @@ func (r *GormPollResultRepository) IncrementVote(roomID string, choiceIDs []int)
 	}
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *GormPollResultRepository) DecrementVote(roomID string, choiceIDs []int) error {
+	// ป้องกันไม่ให้คะแนนติดลบ
+	result := r.db.Model(&entities.PollResult{}).
+		Where("id IN ? AND room_id = ? AND number_vote > 0", choiceIDs, roomID).
+		Update("number_vote", gorm.Expr("number_vote - ?", 1))
+
+	if result.Error != nil {
+		return result.Error
 	}
 	return nil
 }

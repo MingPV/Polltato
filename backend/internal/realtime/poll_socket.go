@@ -31,6 +31,7 @@ const (
 	PollTypeDeleteChoice PollUpdateType = "delete-choice"
 	PollTypeResetPoll    PollUpdateType = "reset-poll"
 	PollTypeUpdatePoll   PollUpdateType = "update-poll"
+	PollTypeDeletePoll   PollUpdateType = "delete-poll"
 )
 
 type PollUpdateEvent struct {
@@ -183,10 +184,19 @@ func NewPollSocketServer() *socketio.Server {
 	return server
 }
 
-// BroadcastPollUpdate เป็น Helper สำหรับให้ UseCase เรียกใช้งานเพื่อส่งข่าวไปหาหน้าบ้าน
 func BroadcastPollUpdate(server *socketio.Server, roomID string, event PollUpdateEvent) {
 	fullRoomID := privateRoomPrefix + roomID
 	log.Printf("realtime | BROADCAST   | type=%q | room=%q", event.Type, fullRoomID)
 	log.Printf("realtime | BROADCAST   | event=%+v", event)
 	server.BroadcastToRoom("/", fullRoomID, "update-poll", event)
+}
+
+func BroadcastPollDelete(server *socketio.Server, roomID string, pollName string) {
+	fullRoomID := privateRoomPrefix + roomID
+	payload := map[string]string{
+		"room_id": roomID,
+		"name":    pollName,
+	}
+	log.Printf("realtime | BROADCAST   | type=delete-poll | room=%q", fullRoomID)
+	server.BroadcastToRoom("/", fullRoomID, "delete-poll", payload)
 }

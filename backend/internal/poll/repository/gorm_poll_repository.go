@@ -41,7 +41,7 @@ func (r *GormPollRepository) FindByRoomID(roomID string) (*entities.Poll, error)
 
 func (r *GormPollRepository) FindByUserID(userID uuid.UUID) ([]*entities.Poll, error) {
 	var pollValues []entities.Poll
-	if err := r.db.Where("user_id = ?", userID).Find(&pollValues).Error; err != nil {
+	if err := r.db.Preload("PollResults").Where("user_id = ?", userID).Find(&pollValues).Error; err != nil {
 		return nil, err
 	}
 
@@ -62,6 +62,17 @@ func (r *GormPollRepository) FindByID(id uint) (*entities.Poll, error) {
 
 func (r *GormPollRepository) PatchByID(id uint, poll *entities.Poll) error {
 	result := r.db.Model(&entities.Poll{}).Where("id = ?", id).Updates(poll)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *GormPollRepository) DeleteByRoomID(roomID string) error {
+	result := r.db.Where("room_id = ?", roomID).Delete(&entities.Poll{})
 	if result.Error != nil {
 		return result.Error
 	}

@@ -14,6 +14,15 @@ definitions:
     - choices
     - poll_name
     type: object
+  dto.MyPollsResponse:
+    properties:
+      polls:
+        items:
+          $ref: '#/definitions/dto.PollResponse'
+        type: array
+      total_polls:
+        type: integer
+    type: object
   dto.PatchPollRequest:
     properties:
       added_choices:
@@ -23,6 +32,15 @@ definitions:
       deleted_choices:
         items:
           type: integer
+        type: array
+      edited_choices:
+        items:
+          properties:
+            choice_name:
+              type: string
+            id:
+              type: integer
+          type: object
         type: array
       is_multi:
         type: boolean
@@ -65,12 +83,14 @@ definitions:
     type: object
   dto.VoteRequest:
     properties:
-      choice_id:
+      unvote_choice_id:
         items:
           type: integer
         type: array
-    required:
-    - choice_id
+      vote_choice_id:
+        items:
+          type: integer
+        type: array
     type: object
   entities.Order:
     properties:
@@ -257,6 +277,22 @@ paths:
       tags:
       - orders
   /polls:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.DataResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MyPollsResponse'
+              type: object
+      summary: Get all polls for the authenticated user
+      tags:
+      - polls
     post:
       consumes:
       - application/json
@@ -278,6 +314,24 @@ paths:
       tags:
       - polls
   /polls/{room_id}:
+    delete:
+      description: Delete a poll and all its results. Only the owner can perform this.
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.MessageResponse'
+      summary: Delete a poll
+      tags:
+      - polls
     get:
       parameters:
       - description: Room ID

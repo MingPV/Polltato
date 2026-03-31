@@ -41,12 +41,45 @@ func (h *HttpPollHandler) Vote(c *fiber.Ctx) error {
 		return responses.ErrorWithMessage(c, err, "invalid request body")
 	}
 
-	response, err := h.pollUseCase.Vote(c.Context(), roomID, req.ChoiceIDs)
+	response, err := h.pollUseCase.Vote(c.Context(), roomID, req.VoteChoiceIDs, req.UnvoteChoiceIDs)
 	if err != nil {
 		return responses.Error(c, err)
 	}
 
 	return responses.SuccessWithData(c, "success", response)
+}
+
+// GetMyPolls godoc
+// @Summary Get all polls for the authenticated user
+// @Tags polls
+// @Produce json
+// @Success 200 {object} responses.DataResponse{data=dto.MyPollsResponse}
+// @Router /polls [get]
+func (h *HttpPollHandler) GetMyPolls(c *fiber.Ctx) error {
+	// 1. Get and Parse UserID from JWT (Middleware sets this)
+	uidLocal := c.Locals("user_id")
+	if uidLocal == nil {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "unauthorized")
+	}
+
+	uid, err := uuid.Parse(uidLocal.(string))
+	if err != nil {
+		return responses.ErrorWithMessage(c, err, "invalid user id")
+	}
+
+	// 2. Call UseCase
+	polls, err := h.pollUseCase.GetPollsByUserID(c.Context(), uid)
+	if err != nil {
+		return responses.Error(c, err)
+	}
+
+	// 3. Wrap Response
+	resp := dto.MyPollsResponse{
+		Polls:      polls,
+		TotalPolls: len(polls),
+	}
+
+	return responses.SuccessWithData(c, "success", resp)
 }
 
 // CreatePoll godoc
@@ -184,4 +217,37 @@ func (h *HttpPollHandler) ResetPoll(c *fiber.Ctx) error {
 	}
 
 	return responses.SuccessWithData(c, "success", response)
+}
+
+// DeletePoll godoc
+// @Summary Delete a poll
+// @Description Delete a poll and all its results. Only the owner can perform this.
+// @Tags polls
+// @Produce json
+// @Param room_id path string true "Room ID"
+// @Success 200 {object} responses.MessageResponse
+// @Router /polls/{room_id} [delete]
+func (h *HttpPollHandler) DeletePoll(c *fiber.Ctx) error {
+	roomID := c.Params("room_id")
+	if roomID == "" {
+		return responses.ErrorWithMessage(c, apperror.ErrInvalidData, "invalid room id")
+	}
+
+	// 1. Get and Parse UserID
+	uidLocal := c.Locals("user_id")
+	if uidLocal == nil {
+		return responses.Error(c, apperror.ErrInvalidData)
+	}
+
+	uid, err := uuid.Parse(uidLocal.(string))
+	if err != nil {
+		return responses.ErrorWithMessage(c, err, "invalid user id")
+	}
+
+	// 2. Call UseCase
+	if err := h.pollUseCase.DeletePoll(c.Context(), roomID, uid); err != nil {
+		return responses.Error(c, err)
+	}
+
+	return responses.Success(c, "success")
 }

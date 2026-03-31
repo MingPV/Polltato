@@ -22,3 +22,8 @@ type PollResultResponse struct {
 	ChoiceName string `json:"choice_name"`
 	NumberVote int    `json:"number_vote"`
 }
+
+type MyPollsResponse struct {
+	Polls      []*PollResponse `json:"polls"`
+	TotalPolls int             `json:"total_polls"`
+}

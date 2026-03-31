@@ -14,5 +14,6 @@ type PollRepository interface {
 	FindByID(id uint) (*entities.Poll, error)
 	PatchByID(id uint, poll *entities.Poll) error
 	DeleteByID(id uint) error
+	DeleteByRoomID(roomID string) error
 	WithTx(tx *gorm.DB) PollRepository
 }

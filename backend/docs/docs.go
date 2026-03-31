@@ -240,6 +240,35 @@ const docTemplate = `{
             }
         },
         "/polls": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Get all polls for the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.DataResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MyPollsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -295,6 +324,33 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/responses.DataResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a poll and all its results. Only the owner can perform this.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "polls"
+                ],
+                "summary": "Delete a poll",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.MessageResponse"
                         }
                     }
                 }
@@ -576,6 +632,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MyPollsResponse": {
+            "type": "object",
+            "properties": {
+                "polls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PollResponse"
+                    }
+                },
+                "total_polls": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.PatchPollRequest": {
             "type": "object",
             "properties": {
@@ -589,6 +659,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "integer"
+                    }
+                },
+                "edited_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "choice_name": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "integer"
+                            }
+                        }
                     }
                 },
                 "is_multi": {
@@ -653,11 +737,14 @@ const docTemplate = `{
         },
         "dto.VoteRequest": {
             "type": "object",
-            "required": [
-                "choice_id"
-            ],
             "properties": {
-                "choice_id": {
+                "unvote_choice_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "vote_choice_id": {
                     "type": "array",
                     "items": {
                         "type": "integer"

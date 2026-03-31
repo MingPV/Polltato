@@ -119,6 +119,21 @@ func (s *PollService) GetPollByRoomID(ctx context.Context, roomID string) (*dto.
 	return dto.ToPollResponse(poll, url), nil
 }
 
+func (s *PollService) GetPollsByUserID(ctx context.Context, userID uuid.UUID) ([]*dto.PollResponse, error) {
+	polls, err := s.pollRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]*dto.PollResponse, len(polls))
+	for i, poll := range polls {
+		url, _ := s.storage.GetURL(ctx, poll.QRCodeImageKey)
+		responses[i] = dto.ToPollResponse(poll, url)
+	}
+
+	return responses, nil
+}
+
 func (s *PollService) PatchPollByRoomID(roomID string, ctx context.Context, req *dto.PatchPollRequest) (*dto.PollResponse, error) {
 	//0. get poll
 
@@ -173,14 +188,20 @@ func (s *PollService) PatchPollByRoomID(roomID string, ctx context.Context, req 
 
 		//5. delete poll results in database
 		if len(req.DeletedChoices) > 0 {
-			if err := pollResultRepo.DeleteByManyID(req.DeletedChoices); err != nil {
+			if err := pollResultRepo.DeleteByManyID(roomID, req.DeletedChoices); err != nil {
 				return err
 			}
 		}
 
-		//6. resrt all poll results of room id to 0
-		if err := pollResultRepo.ResetVote(roomID); err != nil {
-			return err
+		//6. edit poll choices
+		if len(req.EditedChoices) > 0 {
+			for _, choice := range req.EditedChoices {
+				if err := pollResultRepo.PatchByID(choice.ID, roomID, &entities.PollResult{
+					ChoiceName: choice.ChoiceName,
+				}); err != nil {
+					return err
+				}
+			}
 		}
 
 		return nil
@@ -231,7 +252,7 @@ func (s *PollService) PatchPollByRoomID(roomID string, ctx context.Context, req 
 	return response, nil
 }
 
-func (s *PollService) Vote(ctx context.Context, roomID string, choiceIDs []int) (*dto.PollResponse, error) {
+func (s *PollService) Vote(ctx context.Context, roomID string, voteChoiceIDs []int, unvoteChoiceIDs []int) (*dto.PollResponse, error) {
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		pollResultRepo := s.pollResultRepo.WithTx(tx)
@@ -246,7 +267,21 @@ func (s *PollService) Vote(ctx context.Context, roomID string, choiceIDs []int) 
 			Version: poll.Version + 1,
 		})
 
-		return pollResultRepo.IncrementVote(roomID, choiceIDs)
+		// 1. เพิ่มคะแนน (Vote)
+		if len(voteChoiceIDs) > 0 {
+			if err := pollResultRepo.IncrementVote(roomID, voteChoiceIDs); err != nil {
+				return err
+			}
+		}
+
+		// 2. ลดคะแนน (Unvote)
+		if len(unvoteChoiceIDs) > 0 {
+			if err := pollResultRepo.DecrementVote(roomID, unvoteChoiceIDs); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 
 	if err != nil {
@@ -276,7 +311,7 @@ func (s *PollService) Vote(ctx context.Context, roomID string, choiceIDs []int) 
 		event := realtime.PollUpdateEvent{
 			From:    "participant",
 			RoomID:  roomID,
-			Type:    realtime.PollTypeUpdatePoll,
+			Type:    realtime.PollTypeAddVote,
 			Version: int64(poll.Version),
 			Data: realtime.PollData{
 				ID:         poll.ID,
@@ -358,4 +393,46 @@ func (s *PollService) ResetPoll(ctx context.Context, roomID string, userID uuid.
 	}
 
 	return response, nil
+}
+
+func (s *PollService) DeletePoll(ctx context.Context, roomID string, userID uuid.UUID) error {
+	poll, err := s.pollRepo.FindByRoomID(roomID)
+	if err != nil {
+		return err
+	}
+
+	if poll.UserID != userID {
+		return apperror.ErrUnauthorized
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		pollRepo := s.pollRepo.WithTx(tx)
+		pollResultRepo := s.pollResultRepo.WithTx(tx)
+
+		// 1. Delete associated results
+		if err := pollResultRepo.DeleteByRoomID(roomID); err != nil {
+			return err
+		}
+
+		// 2. Delete the poll
+		if err := pollRepo.DeleteByRoomID(roomID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// 3. Broadcast deletion
+	if s.socketServer != nil {
+		realtime.BroadcastPollDelete(s.socketServer, roomID, poll.PollName)
+	}
+
+	// 4. (Optional) Cleanup storage
+	_ = s.storage.Delete(ctx, poll.QRCodeImageKey)
+
+	return nil
 }

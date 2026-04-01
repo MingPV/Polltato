@@ -39,7 +39,7 @@ function toAppUser(u: MeUser): User {
 
 const getUser: QueryFunction<User> = async () => {
   try {
-    const me = (await api.get('/me')) as MeUser;
+    const me = (await api.get('/users/me')) as MeUser;
     return toAppUser(me);
   } catch {
     throw new Error('Unauthenticated');

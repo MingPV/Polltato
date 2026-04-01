@@ -25,7 +25,7 @@ api.interceptors.response.use(
     const reqUrl = String(error.config?.url ?? '').split('?')[0];
     const isSessionProbe =
       error.response?.status === 401 &&
-      (reqUrl === '/me' || reqUrl.endsWith('/me'));
+      (reqUrl === '/users/me' || reqUrl.endsWith('/users/me'));
 
     const data = error.response?.data;
     const message =
@@ -43,7 +43,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const url = String(error.config?.url ?? '').split('?')[0];
-      if (url !== '/me' && !url.endsWith('/me')) {
+      if (url !== '/users/me' && !url.endsWith('/users/me')) {
         const redirectTo =
           new URLSearchParams(window.location.search).get('redirectTo') ||
           window.location.pathname;

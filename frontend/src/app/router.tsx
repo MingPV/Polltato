@@ -54,11 +54,19 @@ export const createAppRouter = (queryClient: QueryClient) =>
     },
     {
       path: paths.pollCreate.path,
-      Component: PollCreateRoute,
+      element: (
+        <ProtectedRoute>
+          <PollCreateRoute />
+        </ProtectedRoute>
+      ),
     },
     {
       path: paths.myPoll.path,
-      Component: MyPollRoute,
+      element: (
+        <ProtectedRoute>
+          <MyPollRoute />
+        </ProtectedRoute>
+      ),
     },
     {
       path: paths.pollDetail.path,

@@ -13,12 +13,9 @@ const SignupRoute = () => {
     <AuthSplitLayout title="Sign up">
       <SignupForm
         onSuccess={() => {
-          navigate(
-            `${redirectTo ? `${redirectTo}` : paths.myPoll.getHref()}`,
-            {
-              replace: true,
-            },
-          );
+          navigate(`${redirectTo ? `${redirectTo}` : paths.myPoll.getHref()}`, {
+            replace: true,
+          });
         }}
       />
     </AuthSplitLayout>

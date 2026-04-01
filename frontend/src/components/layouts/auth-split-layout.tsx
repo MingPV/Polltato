@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { IoHomeSharp } from 'react-icons/io5';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { Head } from '@/components/seo';
+import { Button } from '@/components/ui/button';
 import { Link } from '@/components/ui/link';
 import { paths } from '@/config/paths';
 import { useUser } from '@/lib/auth';
@@ -28,8 +30,12 @@ export const AuthSplitLayout = ({ children, title }: AuthSplitLayoutProps) => {
   return (
     <>
       <Head title={title} />
-      <div className="flex min-h-screen flex-col bg-[#f5efe4] lg:flex-row lg:bg-white">
-        <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:w-1/2 lg:max-w-none lg:px-16 xl:px-24">
+      <div className="relative flex min-h-screen flex-col bg-[#f5efe4] lg:flex-row lg:bg-white">
+      <div className='absolute left-4 top-4 z-20 cursor-pointer p-4 text-[#6b4d3a] hover:bg-[#f7ebdb] rounded-full' onClick={() => navigate(paths.home.getHref())}>
+        <IoHomeSharp className="text-xl" />
+      </div>
+
+      <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:w-1/2 lg:max-w-none lg:px-16 xl:px-24">
           <div className="mb-6 flex justify-center lg:hidden">
             <div className="size-24 overflow-hidden rounded-3xl border border-[#ead7c3] bg-[#fff9f0] p-1.5 shadow-md">
               <img

@@ -11,14 +11,16 @@ data "aws_ami" "amazon_linux_2023" {
 resource "aws_instance" "frontend" {
   ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = "t3.micro" # Free tier eligible in newer regions
-  subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.frontend.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   user_data = templatefile("${path.module}/init_frontend.sh.tpl", {
-    region  = var.aws_region
-    ecr_url = aws_ecr_repository.frontend.repository_url
+    region             = var.aws_region
+    ecr_url            = aws_ecr_repository.frontend.repository_url
+    backend_private_ip = aws_instance.backend.private_ip
   })
+
+  user_data_replace_on_change = true
 
   tags = {
     Name = "polltato-frontend"
@@ -28,7 +30,6 @@ resource "aws_instance" "frontend" {
 resource "aws_instance" "backend" {
   ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.backend.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
@@ -40,6 +41,8 @@ resource "aws_instance" "backend" {
     db_pass = var.db_password
     db_name = var.db_name
   })
+
+  user_data_replace_on_change = true
 
   tags = {
     Name = "polltato-backend"

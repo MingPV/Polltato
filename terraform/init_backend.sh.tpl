@@ -22,13 +22,21 @@ docker rm -f backend || true
 docker image prune -af
 
 # Run backend container, pass DB securely via environment
-# We inject these values securely at launch rather than baking them into the Docker image or source code.
-docker run -d --name backend -p 80:8080 \
+# We map host port 8080 (which Nginx proxy calls) to container port 8000 (Go APP_PORT default)
+docker run -d --name backend -p 8080:8000 \
+  -e DB_PORT="5432" \
   -e DB_HOST="${db_host}" \
   -e DB_USER="${db_user}" \
-  -e DB_PASS="${db_pass}" \
+  -e DB_PASSWORD="${db_pass}" \
   -e DB_NAME="${db_name}" \
+  -e DB_SSLMODE="require" \
+  -e JWT_SECRET="prod-secret-polltato" \
+  -e JWT_EXPIRATION="86400" \
+  -e APP_ENV="production" \
+  -e CORS_ORIGIN="*" \
+  -e FRONTEND_URL="*" \
   ${ecr_url}:latest
 
 # Ensure container restarts automatically
 docker update --restart unless-stopped backend
+

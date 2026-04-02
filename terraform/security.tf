@@ -3,7 +3,7 @@
 resource "aws_security_group" "frontend" {
   name        = "polltato-frontend-sg"
   description = "Security group for frontend EC2 instance"
-  vpc_id      = aws_vpc.main.id
+
 
   ingress {
     description = "HTTP from anywhere"
@@ -45,7 +45,7 @@ resource "aws_security_group" "frontend" {
 resource "aws_security_group" "backend" {
   name        = "polltato-backend-sg"
   description = "Security group for backend EC2 instance"
-  vpc_id      = aws_vpc.main.id
+
 
   ingress {
     description     = "HTTP from Frontend SG"
@@ -86,7 +86,7 @@ resource "aws_security_group" "backend" {
 resource "aws_security_group" "database" {
   name        = "polltato-database-sg"
   description = "Security group for RDS instance"
-  vpc_id      = aws_vpc.main.id
+
 
   ingress {
     description     = "PostgreSQL port from Backend SG"

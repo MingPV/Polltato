@@ -1,21 +1,5 @@
 # setup aws cli
 ## create IAM role for terraform
-### access need
-- VPC
-- EC2
-- ECR
-- RDS
-- S3
-- CloudFront
-- CloudWatch
-- Route53
-- CodePipeline
-- CodeBuild
-- CodeDeploy
-- CodeCommit
-- CodeStar
-- CodeStarNotifications
-- CodeStarConnections
 
 ## create IAM user for terraform
 ### access need

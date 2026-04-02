@@ -19,7 +19,7 @@ fi
 
 echo "Authenticating with ECR..."
 # Log into AWS ECR
-aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $(echo $FRONTEND_ECR | cut -d'/' -f1)
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin "$(echo $FRONTEND_ECR | cut -d'/' -f1)"
 
 # Modify these paths to match where your actual Application source code is
 FRONTEND_SOURCE_DIR="../frontend"
@@ -27,16 +27,11 @@ BACKEND_SOURCE_DIR="../backend"
 
 echo "Building and pushing Frontend..."
 if [ -d "$FRONTEND_SOURCE_DIR" ]; then
-    # Dynamically change .env before building the image
-    echo "Configuring frontend .env..."
-    FRONTEND_IP=$(terraform output -raw frontend_ec2_public_ip)
-    # NOTE: Since the backend is in a private subnet, you'll likely need an ALB or an Nginx reverse proxy.
-    # Update this URL to match your actual backend endpoint routing setup!
-    API_BASE_URL="http://$FRONTEND_IP"
-    
+    # The frontend is now configured with an NGINX reverse proxy inside the EC2 instance
+    # that routes /api requests to the backend private IP directly!
     cat <<EOF > "$FRONTEND_SOURCE_DIR/.env"
-VITE_APP_API_URL=$API_BASE_URL/api/v1
-VITE_APP_SOCKET_URL=$API_BASE_URL
+VITE_APP_API_URL=/api/v1
+VITE_APP_SOCKET_URL=/
 VITE_APP_ENABLE_API_MOCKING=false
 EOF
     

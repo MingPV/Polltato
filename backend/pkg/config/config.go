@@ -18,6 +18,7 @@ type Config struct {
 	DBUser      string
 	DBPassword  string
 	DBName      string
+	DBSSLMode   string
 	DatabaseDSN string
 
 	JWTSecret     string
@@ -53,6 +54,7 @@ func LoadConfig(env string) *Config {
 		DBUser:        getEnv("DB_USER", "postgres"),
 		DBPassword:    getEnv("DB_PASSWORD", ""),
 		DBName:        getEnv("DB_NAME", "test"),
+		DBSSLMode:     getEnv("DB_SSLMODE", "disable"),
 		JWTSecret:     getEnv("JWT_SECRET", "changeme"),
 		JWTExpiration: jwtExp,
 		S3Bucket:      getEnv("S3_BUCKET", getEnv("S3Bucket", "")),
@@ -63,8 +65,8 @@ func LoadConfig(env string) *Config {
 	}
 
 	cfg.DatabaseDSN = fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode,
 	)
 
 	return cfg

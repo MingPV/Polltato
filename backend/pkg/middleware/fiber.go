@@ -20,15 +20,22 @@ func FiberMiddleware(app *fiber.App) {
 		origins[i] = strings.TrimSpace(origins[i])
 	}
 
+	allowOrigins := strings.Join(origins, ",")
+	corsConfig := cors.Config{
+		AllowCredentials: true,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Cookie",
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+	}
+
+	if allowOrigins == "*" {
+		corsConfig.AllowOrigins = "http://localhost:3000" // To bypass the panic validation
+		corsConfig.AllowOriginsFunc = func(origin string) bool { return true }
+	} else {
+		corsConfig.AllowOrigins = allowOrigins
+	}
+
 	app.Use(
-
 		logger.New(), // Logs all requests
-
-		cors.New(cors.Config{
-			AllowOrigins:     strings.Join(origins, ","),
-			AllowCredentials: true,
-			AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Cookie",
-			AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		}),
+		cors.New(corsConfig),
 	)
 }

@@ -32,7 +32,7 @@ docker run -d --name backend -p 8080:8000 \
   -e DB_SSLMODE="require" \
   -e JWT_SECRET="prod-secret-polltato" \
   -e JWT_EXPIRATION="86400" \
-  -e APP_ENV="production" \
+  -e APP_ENV="development" \
   -e CORS_ORIGIN="*" \
   -e FRONTEND_URL="*" \
   ${ecr_url}:latest

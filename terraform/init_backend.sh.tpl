@@ -30,6 +30,8 @@ docker run -d --name backend -p 8080:8000 \
   -e DB_PASSWORD="${db_pass}" \
   -e DB_NAME="${db_name}" \
   -e DB_SSLMODE="require" \
+  -e S3_BUCKET="${s3_bucket}" \
+  -e S3_REGION="${region}" \
   -e JWT_SECRET="prod-secret-polltato" \
   -e JWT_EXPIRATION="86400" \
   -e APP_ENV="development" \
@@ -39,4 +41,3 @@ docker run -d --name backend -p 8080:8000 \
 
 # Ensure container restarts automatically
 docker update --restart unless-stopped backend
-

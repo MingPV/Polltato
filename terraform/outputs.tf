@@ -34,3 +34,8 @@ output "ci_user_secret_key" {
   description = "AWS Secret Access Key for CI/CD script"
   sensitive   = true
 }
+
+output "s3_bucket" {
+  value       = aws_s3_bucket.main.id
+  description = "The S3 bucket for Polltato assets"
+}

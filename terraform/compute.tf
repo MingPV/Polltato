@@ -34,12 +34,13 @@ resource "aws_instance" "backend" {
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   user_data = templatefile("${path.module}/init_backend.sh.tpl", {
-    region  = var.aws_region
-    ecr_url = aws_ecr_repository.backend.repository_url
-    db_host = aws_db_instance.postgres.address
-    db_user = var.db_username
-    db_pass = var.db_password
-    db_name = var.db_name
+    region    = var.aws_region
+    ecr_url   = aws_ecr_repository.backend.repository_url
+    db_host   = aws_db_instance.postgres.address
+    db_user   = var.db_username
+    db_pass   = var.db_password
+    db_name   = var.db_name
+    s3_bucket = aws_s3_bucket.main.id
   })
 
   user_data_replace_on_change = true

@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "main" {
   bucket_prefix = "polltato-assets-"
-
+  force_destroy = true
   tags = {
     Name = "polltato-s3-bucket"
   }

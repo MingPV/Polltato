@@ -42,6 +42,22 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    # Support WebSockets for Socket.IO
+    location /socket.io/ {
+        proxy_pass http://${backend_private_ip}:8080/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Disable buffering and cache for WebSocket streams
+        proxy_buffering off;
+        proxy_cache_bypass $http_upgrade;
+    }
 }
 EOF
 

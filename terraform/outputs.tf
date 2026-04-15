@@ -2,16 +2,14 @@ output "aws_region" {
   value = var.aws_region
 }
 
-/*
 output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.frontend.domain_name
-  description = "The domain name of the CloudFront distribution"
+  description = "The CloudFront URL — use this to access the app (HTTPS)"
 }
-*/
 
 output "frontend_ec2_public_ip" {
   value       = aws_instance.frontend.public_ip
-  description = "Public IP of the frontend EC2 instance"
+  description = "Public IP of frontend EC2 (direct access blocked by SG — use CloudFront URL)"
 }
 
 output "frontend_ecr_repository_url" {

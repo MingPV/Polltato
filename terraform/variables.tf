@@ -28,3 +28,15 @@ variable "vpc_cidr" {
   type        = string
   default     = "10.0.0.0/16"
 }
+
+variable "availability_zone_a" {
+  description = "Primary availability zone (us-west-1 has us-west-1a and us-west-1c)"
+  type        = string
+  default     = "us-west-1a"
+}
+
+variable "availability_zone_b" {
+  description = "Secondary availability zone for RDS multi-AZ subnet group"
+  type        = string
+  default     = "us-west-1c" # us-west-1 only has 1a and 1c (no 1b)
+}

@@ -40,4 +40,10 @@ aws configure set profile.my-dev-role.source_profile my-base-identity
 export AWS_PROFILE=my-dev-role
 ```
 
+## using access key
+```bash
+export AWS_ACCESS_KEY_ID=your_access_key_id
+export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+```
+
 after this you can run terraform commands

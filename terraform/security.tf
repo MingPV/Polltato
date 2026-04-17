@@ -19,6 +19,15 @@ resource "aws_security_group" "frontend" {
     prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
 
+  # DEBUG: Allow direct HTTP access to bypass CloudFront (Delete after testing)
+  ingress {
+    description = "DEBUG: Direct HTTP access"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # SSH for administration (frontend is in public subnet)
   ingress {
     description = "SSH for admin"

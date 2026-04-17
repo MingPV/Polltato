@@ -1,6 +1,6 @@
 #!/bin/bash
 # Install Docker on Amazon Linux 2023 / Amazon Linux 2
-yum update -y
+# yum update -y
 yum install docker -y || amazon-linux-extras install docker -y
 systemctl start docker
 systemctl enable docker

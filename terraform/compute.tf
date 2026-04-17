@@ -8,6 +8,11 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
+resource "aws_key_pair" "polltato_key" {
+  key_name   = "polltato-key"
+  public_key = var.ssh_public_key
+}
+
 # ── Frontend EC2 (Public Subnet) ──────────────────────────────────────────────
 # Public subnet + public IP required so CloudFront can reach it as the origin.
 # Security group only allows port 80 from the CloudFront managed prefix list.
@@ -18,6 +23,7 @@ resource "aws_instance" "frontend" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.frontend.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+  key_name                    = aws_key_pair.polltato_key.key_name
 
   user_data = templatefile("${path.module}/init_frontend.sh.tpl", {
     region             = var.aws_region
@@ -27,7 +33,7 @@ resource "aws_instance" "frontend" {
 
   user_data_replace_on_change = true
 
-  depends_on = [null_resource.docker_build_push_frontend]
+  depends_on = [null_resource.docker_deploy]
 
   tags = {
     Name = "polltato-frontend"
@@ -44,6 +50,7 @@ resource "aws_instance" "backend" {
   associate_public_ip_address = false
   vpc_security_group_ids      = [aws_security_group.backend.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+  key_name                    = aws_key_pair.polltato_key.key_name
 
   user_data = templatefile("${path.module}/init_backend.sh.tpl", {
     region    = var.aws_region
@@ -57,7 +64,7 @@ resource "aws_instance" "backend" {
 
   user_data_replace_on_change = true
 
-  depends_on = [null_resource.docker_build_push_backend]
+  depends_on = [null_resource.docker_deploy]
 
   tags = {
     Name = "polltato-backend"

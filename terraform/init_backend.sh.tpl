@@ -31,6 +31,20 @@ aws ecr get-login-password --region "$REGION" | \
 echo "[restart_backend] Pulling latest image..."
 docker pull "$ECR_URL:latest"
 
+echo "[restart_backend] Fetching CloudFront URL from SSM..."
+# Fallback to "*" if the parameter doesn't exist yet (breaks the circular dependency)
+CF_DOMAIN=$(aws ssm get-parameter --name "/polltato/frontend_url" --region "$REGION" --query "Parameter.Value" --output text 2>/dev/null || echo "*")
+
+if [ "$CF_DOMAIN" != "*" ] && [ -n "$CF_DOMAIN" ]; then
+    CORS_ORIGIN="https://$CF_DOMAIN"
+    FRONTEND_URL="https://$CF_DOMAIN"
+    echo "[restart_backend] Using CloudFront URL: $FRONTEND_URL"
+else
+    CORS_ORIGIN="*"
+    FRONTEND_URL="*"
+    echo "[restart_backend] CloudFront URL not found in SSM, falling back to '*'"
+fi
+
 echo "[restart_backend] Replacing container..."
 docker rm -f backend || true
 docker image prune -af
@@ -47,8 +61,8 @@ docker run -d --name backend -p 8080:8000 \
   -e JWT_SECRET="prod-secret-polltato" \
   -e JWT_EXPIRATION="86400" \
   -e APP_ENV="development" \
-  -e CORS_ORIGIN="*" \
-  -e FRONTEND_URL="*" \
+  -e CORS_ORIGIN="$CORS_ORIGIN" \
+  -e FRONTEND_URL="$FRONTEND_URL" \
   "$ECR_URL:latest"
 
 docker update --restart unless-stopped backend

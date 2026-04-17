@@ -100,3 +100,17 @@ resource "aws_cloudfront_distribution" "frontend" {
     Name = "polltato-frontend-cdn-${random_id.suffix.hex}"
   }
 }
+
+# ── SSM Parameter Store ───────────────────────────────────────────────────────
+# Break the circular dependency: CloudFront writes its URL here, 
+# and the Backend EC2 fetches it at runtime.
+resource "aws_ssm_parameter" "frontend_url" {
+  name        = "/polltato/frontend_url"
+  description = "The CloudFront distribution domain name for Polltato frontend"
+  type        = "String"
+  value       = aws_cloudfront_distribution.frontend.domain_name
+
+  tags = {
+    Name = "polltato-frontend-url-param-${random_id.suffix.hex}"
+  }
+}

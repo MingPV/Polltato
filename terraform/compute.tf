@@ -28,7 +28,7 @@ resource "aws_instance" "frontend" {
   user_data_replace_on_change = true
 
   tags = {
-    Name = "polltato-frontend"
+    Name = "polltato-frontend-${random_id.suffix.hex}"
   }
 }
 
@@ -56,6 +56,6 @@ resource "aws_instance" "backend" {
   user_data_replace_on_change = true
 
   tags = {
-    Name = "polltato-backend"
+    Name = "polltato-backend-${random_id.suffix.hex}"
   }
 }

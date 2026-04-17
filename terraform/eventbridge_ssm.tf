@@ -17,7 +17,7 @@ data "aws_caller_identity" "current" {}
 # The scripts themselves contain all credentials (baked in via user_data).
 
 resource "aws_ssm_document" "update_frontend" {
-  name          = "polltato-update-frontend"
+  name          = "polltato-update-frontend-${random_id.suffix.hex}"
   document_type = "Command"
 
   content = jsonencode({
@@ -36,12 +36,12 @@ resource "aws_ssm_document" "update_frontend" {
   })
 
   tags = {
-    Name = "polltato-update-frontend"
+    Name = "polltato-update-frontend-${random_id.suffix.hex}"
   }
 }
 
 resource "aws_ssm_document" "update_backend" {
-  name          = "polltato-update-backend"
+  name          = "polltato-update-backend-${random_id.suffix.hex}"
   document_type = "Command"
 
   content = jsonencode({
@@ -60,7 +60,7 @@ resource "aws_ssm_document" "update_backend" {
   })
 
   tags = {
-    Name = "polltato-update-backend"
+    Name = "polltato-update-backend-${random_id.suffix.hex}"
   }
 }
 
@@ -69,7 +69,7 @@ resource "aws_ssm_document" "update_backend" {
 # This is a separate role from the EC2 instance role.
 
 resource "aws_iam_role" "eventbridge_ssm_role" {
-  name = "polltato-eventbridge-ssm-role"
+  name = "polltato-eventbridge-ssm-role-${random_id.suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -86,7 +86,7 @@ resource "aws_iam_role" "eventbridge_ssm_role" {
 }
 
 resource "aws_iam_role_policy" "eventbridge_ssm_policy" {
-  name = "polltato-eventbridge-ssm-policy"
+  name = "polltato-eventbridge-ssm-policy-${random_id.suffix.hex}"
   role = aws_iam_role.eventbridge_ssm_role.id
 
   policy = jsonencode({
@@ -112,7 +112,7 @@ resource "aws_iam_role_policy" "eventbridge_ssm_policy" {
 # Trigger on ECR "PUSH" events for the :latest tag on each repo.
 
 resource "aws_cloudwatch_event_rule" "ecr_push_frontend" {
-  name        = "polltato-ecr-push-frontend"
+  name        = "polltato-ecr-push-frontend-${random_id.suffix.hex}"
   description = "Fires when a new :latest image is pushed to polltato-frontend ECR repo."
 
   event_pattern = jsonencode({
@@ -128,7 +128,7 @@ resource "aws_cloudwatch_event_rule" "ecr_push_frontend" {
 }
 
 resource "aws_cloudwatch_event_rule" "ecr_push_backend" {
-  name        = "polltato-ecr-push-backend"
+  name        = "polltato-ecr-push-backend-${random_id.suffix.hex}"
   description = "Fires when a new :latest image is pushed to polltato-backend ECR repo."
 
   event_pattern = jsonencode({

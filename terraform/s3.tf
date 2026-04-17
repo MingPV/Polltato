@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "main" {
-  bucket_prefix = "polltato-assets-"
+  bucket        = "polltato-assets-${random_id.suffix.hex}"
   force_destroy = true
   tags = {
     Name = "polltato-s3-bucket"

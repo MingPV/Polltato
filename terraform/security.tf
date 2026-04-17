@@ -6,7 +6,7 @@ data "aws_ec2_managed_prefix_list" "cloudfront" {
 
 # ── Frontend Security Group ───────────────────────────────────────────────────
 resource "aws_security_group" "frontend" {
-  name        = "polltato-frontend-sg"
+  name        = "polltato-frontend-sg-${random_id.suffix.hex}"
   description = "Security group for frontend EC2 instance"
   vpc_id      = aws_vpc.main.id
 
@@ -35,12 +35,12 @@ resource "aws_security_group" "frontend" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "polltato-frontend-sg" }
+  tags = { Name = "polltato-frontend-sg-${random_id.suffix.hex}" }
 }
 
 # ── Backend Security Group ────────────────────────────────────────────────────
 resource "aws_security_group" "backend" {
-  name        = "polltato-backend-sg"
+  name        = "polltato-backend-sg-${random_id.suffix.hex}"
   description = "Security group for backend EC2 instance (private subnet)"
   vpc_id      = aws_vpc.main.id
 
@@ -61,12 +61,12 @@ resource "aws_security_group" "backend" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "polltato-backend-sg" }
+  tags = { Name = "polltato-backend-sg-${random_id.suffix.hex}" }
 }
 
 # ── Database Security Group ───────────────────────────────────────────────────
 resource "aws_security_group" "database" {
-  name        = "polltato-database-sg"
+  name        = "polltato-database-sg-${random_id.suffix.hex}"
   description = "Security group for RDS instance (private subnet)"
   vpc_id      = aws_vpc.main.id
 
@@ -85,5 +85,5 @@ resource "aws_security_group" "database" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "polltato-database-sg" }
+  tags = { Name = "polltato-database-sg-${random_id.suffix.hex}" }
 }

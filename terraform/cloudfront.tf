@@ -97,6 +97,6 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   tags = {
-    Name = "polltato-frontend-cdn"
+    Name = "polltato-frontend-cdn-${random_id.suffix.hex}"
   }
 }

@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "frontend" {
-  name                 = "polltato-frontend"
+  name                 = "polltato-frontend-${random_id.suffix.hex}"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 
@@ -9,7 +9,7 @@ resource "aws_ecr_repository" "frontend" {
 }
 
 resource "aws_ecr_repository" "backend" {
-  name                 = "polltato-backend"
+  name                 = "polltato-backend-${random_id.suffix.hex}"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 

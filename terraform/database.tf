@@ -1,6 +1,6 @@
 
 resource "aws_db_instance" "postgres" {
-  identifier        = "polltato-postgres"
+  identifier        = "polltato-postgres-${random_id.suffix.hex}"
   engine            = "postgres"
   instance_class    = "db.t3.micro" # Free tier eligible
   allocated_storage = 20            # Free tier max
@@ -15,6 +15,6 @@ resource "aws_db_instance" "postgres" {
   publicly_accessible    = false
 
   tags = {
-    Name = "polltato-rds"
+    Name = "polltato-rds-${random_id.suffix.hex}"
   }
 }

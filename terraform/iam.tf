@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "ec2_assume_role" {
 }
 
 resource "aws_iam_role" "ec2_ecr_role" {
-  name               = "polltato-ec2-ecr-role"
+  name               = "polltato-ec2-ecr-role-${random_id.suffix.hex}"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
@@ -27,13 +27,13 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "polltato-ec2-profile"
+  name = "polltato-ec2-profile-${random_id.suffix.hex}"
   role = aws_iam_role.ec2_ecr_role.name
 }
 
 # IAM User for CI/CD pipeline to push images to ECR securely
 resource "aws_iam_user" "ci_user" {
-  name = "polltato-ci-user"
+  name = "polltato-ci-user-${random_id.suffix.hex}"
 }
 
 resource "aws_iam_access_key" "ci_user" {
@@ -61,13 +61,13 @@ data "aws_iam_policy_document" "ecr_push_policy" {
 }
 
 resource "aws_iam_user_policy" "ci_user_policy" {
-  name   = "polltato-ecr-push-policy"
+  name   = "polltato-ecr-push-policy-${random_id.suffix.hex}"
   user   = aws_iam_user.ci_user.name
   policy = data.aws_iam_policy_document.ecr_push_policy.json
 }
 
 resource "aws_iam_policy" "ec2_s3_policy" {
-  name        = "polltato-ec2-s3-policy"
+  name        = "polltato-ec2-s3-policy-${random_id.suffix.hex}"
   description = "Allows EC2 instances to access the S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"

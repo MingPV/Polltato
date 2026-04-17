@@ -5,9 +5,9 @@ export const options = {
   ext: {
     loadimpact: {
       projectID: 6362853,
-      name: "CDN Frontend Poll 5 Target Columbus",
+      name: "Frontend Poll 5 Target Columbus",
       distribution: {
-        singapore: { loadZone: "amazon:sg:singapore", percent: 100 },
+        columbus: { loadZone: "amazon:us:columbus", percent: 100 },
       },
     },
   },
@@ -35,17 +35,17 @@ export const options = {
     checks: ["rate>=0.95"],
   },
 };
-const CLOUDFRONT_URL =
-  "https://dl04a5i6zy9zj.cloudfront.net/poll/b218693a-7905-4071-927b-ab007112e9d6";
+
+const FRONTEND_URL =
+  "http://3.101.106.150/poll/b218693a-7905-4071-927b-ab007112e9d6";
 
 export async function browserTest() {
   const page = await browser.newPage();
   let successInLoad = false;
-
   try {
     // Navigate with increased timeout and safer waitUntil
-    console.log(`Navigating to: ${CLOUDFRONT_URL}`);
-    await page.goto(CLOUDFRONT_URL, {
+    console.log(`Navigating to: ${FRONTEND_URL}`);
+    await page.goto(FRONTEND_URL, {
       waitUntil: "domcontentloaded",
       timeout: 30000,
     });

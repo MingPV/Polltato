@@ -1,28 +1,40 @@
 #!/bin/bash
-# Install Docker on Amazon Linux 2023 / Amazon Linux 2
+# ─────────────────────────────────────────────────────────────────────────────
+# Backend EC2 init script
+# Runs once on first boot. Writes a persistent restart script that SSM
+# will call on every subsequent ECR image push (via EventBridge).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Install Docker
 yum update -y
 yum install docker -y || amazon-linux-extras install docker -y
 systemctl start docker
 systemctl enable docker
-
-# Add ec2-user to docker group
 usermod -a -G docker ec2-user
 
 # Wait for network and metadata to be fully up
 sleep 15
 
-# Login to ECR
-aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_url}
+# ── Persistent restart script (called by SSM on every image push) ─────────────
+# Terraform substitutes all $${...} template vars at render time, so credentials
+# and connection strings are baked into the script on disk — not stored in SSM.
+cat << 'RESTART' > /home/ec2-user/restart_backend.sh
+#!/bin/bash
+set -e
+REGION="${region}"
+ECR_URL="${ecr_url}"
 
-# Pull latest backend image
-docker pull ${ecr_url}:latest
+echo "[restart_backend] Authenticating with ECR..."
+aws ecr get-login-password --region "$REGION" | \
+  docker login --username AWS --password-stdin "$(echo "$ECR_URL" | cut -d'/' -f1)"
 
-# Stop and remove any existing container and unused images
+echo "[restart_backend] Pulling latest image..."
+docker pull "$ECR_URL:latest"
+
+echo "[restart_backend] Replacing container..."
 docker rm -f backend || true
 docker image prune -af
 
-# Run backend container, pass DB securely via environment
-# We map host port 8080 (which Nginx proxy calls) to container port 8000 (Go APP_PORT default)
 docker run -d --name backend -p 8080:8000 \
   -e DB_PORT="5432" \
   -e DB_HOST="${db_host}" \
@@ -37,7 +49,21 @@ docker run -d --name backend -p 8080:8000 \
   -e APP_ENV="development" \
   -e CORS_ORIGIN="*" \
   -e FRONTEND_URL="*" \
-  ${ecr_url}:latest
+  "$ECR_URL:latest"
 
-# Ensure container restarts automatically
 docker update --restart unless-stopped backend
+echo "[restart_backend] Container updated successfully."
+RESTART
+
+chmod +x /home/ec2-user/restart_backend.sh
+
+# ── Attempt initial container start ───────────────────────────────────────────
+# This may fail gracefully if no image has been pushed to ECR yet.
+# The container will be started automatically by EventBridge → SSM after the
+# first push from build_and_push.sh.
+echo "Attempting initial container start..."
+bash /home/ec2-user/restart_backend.sh || {
+  echo "WARNING: No image found in ECR yet."
+  echo "Run build_and_push.sh to push the first image."
+  echo "EventBridge will trigger SSM to start the container automatically."
+}

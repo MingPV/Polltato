@@ -27,8 +27,6 @@ resource "aws_instance" "frontend" {
 
   user_data_replace_on_change = true
 
-  depends_on = [null_resource.docker_build_push_frontend]
-
   tags = {
     Name = "polltato-frontend"
   }
@@ -56,8 +54,6 @@ resource "aws_instance" "backend" {
   })
 
   user_data_replace_on_change = true
-
-  depends_on = [null_resource.docker_build_push_backend]
 
   tags = {
     Name = "polltato-backend"

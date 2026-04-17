@@ -1,5 +1,16 @@
 #!/bin/bash
-# Script to build and push Docker images to AWS ECR
+# ─────────────────────────────────────────────────────────────────────────────
+# build_and_push.sh — Build and push Docker images to AWS ECR
+#
+# DEPLOYMENT ORDER:
+#   1. terraform apply          ← provision ALL infrastructure first
+#                                 (ECR, EC2, CloudFront, EventBridge, SSM)
+#   2. bash build_and_push.sh   ← build & push images (this script)
+#
+# After step 2, EventBridge automatically detects the ECR push and triggers
+# SSM to pull the new image and restart the container on EC2.
+# Every subsequent push will also be auto-deployed the same way.
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Exit on any failure
 set -e

@@ -25,6 +25,10 @@ import {
 } from '@/features/polls/api/types';
 import { useUpdatePoll } from '@/features/polls/api/update-poll';
 import { useVotePoll } from '@/features/polls/api/vote-poll';
+import {
+  setStoredVoteChoiceIds,
+  voteChoiceIdsFromStorage,
+} from '@/features/polls/lib/poll-vote-storage';
 import { useUser } from '@/lib/auth';
 
 const PollDetailRoute = () => {
@@ -38,8 +42,8 @@ const PollDetailRoute = () => {
       enabled: Boolean(user.data),
     },
   });
-  const [votedOptionIds, setVotedOptionIds] = useState<Set<number>>(
-    () => new Set(),
+  const [votedOptionIds, setVotedOptionIds] = useState<Set<number>>(() =>
+    voteChoiceIdsFromStorage(pollId),
   );
   const [newOptionLabel, setNewOptionLabel] = useState('');
   const [isCopied, setIsCopied] = useState(false);
@@ -79,6 +83,34 @@ const PollDetailRoute = () => {
     if (!pollId) {
       return;
     }
+    setVotedOptionIds(voteChoiceIdsFromStorage(pollId));
+  }, [pollId]);
+
+  useEffect(() => {
+    if (!pollId) {
+      return;
+    }
+    setStoredVoteChoiceIds(pollId, votedOptionIds);
+  }, [pollId, votedOptionIds]);
+
+  useEffect(() => {
+    if (!poll?.choices?.length) {
+      return;
+    }
+    const valid = new Set(poll.choices.map((c) => c.id));
+    setVotedOptionIds((prev) => {
+      const next = new Set([...prev].filter((id) => valid.has(id)));
+      if (next.size === prev.size && [...prev].every((id) => next.has(id))) {
+        return prev;
+      }
+      return next;
+    });
+  }, [poll?.choices]);
+
+  useEffect(() => {
+    if (!pollId) {
+      return;
+    }
 
     const socket = io(env.SOCKET_URL, {
       forceNew: true,
@@ -93,6 +125,10 @@ const PollDetailRoute = () => {
     const onUpdatePoll = (payload: PollUpdateEvent) => {
       if (payload.room_id !== pollId) {
         return;
+      }
+
+      if (payload.type === 'reset-poll') {
+        setVotedOptionIds(new Set());
       }
 
       queryClient.setQueryData<Poll | undefined>(
@@ -121,7 +157,7 @@ const PollDetailRoute = () => {
       socket.off('delete-poll', onDeletePoll);
       socket.disconnect();
     };
-  }, [navigate, pollId, queryClient]);
+  }, [navigate, pollId, queryClient, setVotedOptionIds]);
 
   const handleVoteToggle = (optionId: number) => {
     if (!pollId || !poll) {

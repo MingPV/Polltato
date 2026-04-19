@@ -16,6 +16,7 @@ import {
   useMyPolls,
 } from '@/features/polls/api/get-my-polls';
 import { getPollQueryOptions, usePoll } from '@/features/polls/api/get-poll';
+import { mergePollFromSocketEvent } from '@/features/polls/api/merge-poll-from-socket';
 import { useResetPoll } from '@/features/polls/api/reset-poll';
 import {
   Poll,
@@ -84,36 +85,7 @@ const PollDetailRoute = () => {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      upgrade: false,
     });
-    const mergeSocketPoll = (
-      current: Poll | undefined,
-      payload: PollUpdateEvent,
-    ): Poll => {
-      const choices = payload.data.choices.map((choice) => ({
-        id: choice.id,
-        choice_name: choice.choice_name,
-        number_vote: choice.number_vote,
-      }));
-      const total_votes = choices.reduce(
-        (sum, choice) => sum + choice.number_vote,
-        0,
-      );
-
-      return {
-        id: payload.data.id,
-        poll_name: payload.data.poll_name,
-        is_multi: payload.data.is_multi,
-        room_id: payload.data.room_id,
-        qrcode_url: current?.qrcode_url ?? '',
-        choices,
-        total_votes,
-        version: payload.version,
-        create_time: current?.create_time ?? new Date().toISOString(),
-        update_time: payload.data.update_time,
-      };
-    };
-
     const onConnect = () => {
       socket.emit('join-room', pollId);
     };
@@ -125,7 +97,7 @@ const PollDetailRoute = () => {
 
       queryClient.setQueryData<Poll | undefined>(
         getPollQueryOptions(pollId).queryKey,
-        (current) => mergeSocketPoll(current, payload),
+        (current) => mergePollFromSocketEvent(current, payload),
       );
       queryClient.invalidateQueries({
         queryKey: getMyPollsQueryOptions().queryKey,
@@ -341,13 +313,22 @@ const PollDetailRoute = () => {
                   </div>
                 ) : null}
 
-                <div className="mt-6 space-y-3">
+                <div
+                  className="mt-6 space-y-3"
+                  aria-busy={votePollMutation.isPending}
+                >
                   {sortedChoices.map((option) => {
                     const percentage =
                       totalVotes === 0
                         ? 0
                         : Math.round((option.number_vote / totalVotes) * 100);
                     const hasVotedThis = votedOptionIds.has(option.id);
+                    const vars = votePollMutation.variables;
+                    const isSavingThisOption =
+                      votePollMutation.isPending &&
+                      vars &&
+                      (vars.vote_choice_id.includes(option.id) ||
+                        vars.unvote_choice_id.includes(option.id));
 
                     return (
                       <div key={option.id} className="relative">
@@ -358,6 +339,10 @@ const PollDetailRoute = () => {
                             hasVotedThis
                               ? 'cursor-pointer border-[#c9b49e] bg-[#f0e6da] hover:bg-[#e8dccf]'
                               : 'border-[#dec4aa] bg-[#fff8ee] hover:bg-[#faf0e3]'
+                          } ${
+                            votePollMutation.isPending && !isSavingThisOption
+                              ? 'opacity-60'
+                              : ''
                           }`}
                           disabled={votePollMutation.isPending}
                         >

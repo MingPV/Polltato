@@ -36,13 +36,14 @@ echo "[restart_backend] Fetching CloudFront URL from SSM..."
 CF_DOMAIN=$(aws ssm get-parameter --name "/polltato/frontend_url" --region "$REGION" --query "Parameter.Value" --output text 2>/dev/null || echo "*")
 
 if [ "$CF_DOMAIN" != "*" ] && [ -n "$CF_DOMAIN" ]; then
-    CORS_ORIGIN="https://$CF_DOMAIN"
+    # Frontend Go code expects comma-separated list for CORS_ORIGIN
+    CORS_ORIGIN="https://$CF_DOMAIN,http://${frontend_public_ip}"
     FRONTEND_URL="https://$CF_DOMAIN"
-    echo "[restart_backend] Using CloudFront URL: $FRONTEND_URL"
+    echo "[restart_backend] Using CloudFront + Static IP in CORS: $CORS_ORIGIN"
 else
-    CORS_ORIGIN="*"
-    FRONTEND_URL="*"
-    echo "[restart_backend] CloudFront URL not found in SSM, falling back to '*'"
+    CORS_ORIGIN="http://${frontend_public_ip}"
+    FRONTEND_URL="http://${frontend_public_ip}"
+    echo "[restart_backend] CloudFront URL not found, falling back to Static IP: $FRONTEND_URL"
 fi
 
 echo "[restart_backend] Replacing container..."

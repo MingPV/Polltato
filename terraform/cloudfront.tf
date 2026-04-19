@@ -2,7 +2,7 @@
 # Free tier: 1 TB data transfer + 10M HTTP requests per month
 resource "aws_cloudfront_distribution" "frontend" {
   origin {
-    domain_name = aws_instance.frontend.public_dns
+    domain_name = "ec2-${replace(aws_eip.frontend.public_ip, ".", "-")}.${var.aws_region}.compute.amazonaws.com"
     origin_id   = "FrontendEC2Origin"
 
     custom_origin_config {

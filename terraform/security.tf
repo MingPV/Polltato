@@ -10,13 +10,22 @@ resource "aws_security_group" "frontend" {
   description = "Security group for frontend EC2 instance"
   vpc_id      = aws_vpc.main.id
 
-  # HTTP only from CloudFront — direct browser access is blocked
+  # HTTP from CloudFront
   ingress {
     description     = "HTTP from CloudFront only"
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
     prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
+  }
+
+  # HTTP from Anywhere (for debugging via Direct IP)
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # SSH for administration (frontend is in public subnet)

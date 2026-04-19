@@ -59,6 +59,13 @@ resource "aws_eip" "nat" {
   tags       = { Name = "polltato-nat-eip-${random_id.suffix.hex}" }
 }
 
+# Frontend Elastic IP
+resource "aws_eip" "frontend" {
+  domain     = "vpc"
+  depends_on = [aws_internet_gateway.main]
+  tags       = { Name = "polltato-frontend-eip-${random_id.suffix.hex}" }
+}
+
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public_a.id # NAT GW must be in a PUBLIC subnet

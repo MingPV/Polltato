@@ -5,9 +5,9 @@ export const options = {
   ext: {
     loadimpact: {
       projectID: 6362853,
-      name: "Frontend Poll 5 Target Columbus",
+      name: "Frontend Poll 5 Target Tokyo",
       distribution: {
-        columbus: { loadZone: "amazon:us:columbus", percent: 100 },
+        tokyo: { loadZone: "amazon:jp:tokyo", percent: 100 },
       },
     },
   },
@@ -37,7 +37,7 @@ export const options = {
 };
 
 const FRONTEND_URL =
-  "http://3.101.106.150/poll/b218693a-7905-4071-927b-ab007112e9d6";
+  "http://54.183.4.186/poll/3974b69e-ed17-4859-bb31-964584e55b2f";
 
 export async function browserTest() {
   const page = await browser.newPage();
@@ -55,7 +55,7 @@ export async function browserTest() {
     await pollHeader.waitFor({ state: "visible", timeout: 15000 });
     const headerText = await pollHeader.textContent();
     const isHeaderCorrect = headerText.includes(
-      "Poll #b218693a-7905-4071-927b-ab007112e9d6",
+      "Poll #3974b69e-ed17-4859-bb31-964584e55b2f",
     );
 
     // Check for the QR Code image and its display status (width > 0)

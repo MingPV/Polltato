@@ -1,3 +1,8 @@
+# ── Data Sources ─────────────────────────────────────────────────────────────
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 # ── VPC ──────────────────────────────────────────────────────────────────────
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -18,7 +23,7 @@ resource "aws_internet_gateway" "main" {
 resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = var.availability_zone_a
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = false # Public IP assigned explicitly per instance
 
   tags = { Name = "polltato-public-a-${random_id.suffix.hex}" }
@@ -28,7 +33,7 @@ resource "aws_subnet" "public_a" {
 resource "aws_subnet" "private_backend" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = var.availability_zone_a
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = { Name = "polltato-private-backend-${random_id.suffix.hex}" }
 }
@@ -37,7 +42,7 @@ resource "aws_subnet" "private_backend" {
 resource "aws_subnet" "private_db_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.3.0/24"
-  availability_zone = var.availability_zone_a
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = { Name = "polltato-private-db-a-${random_id.suffix.hex}" }
 }
@@ -45,7 +50,7 @@ resource "aws_subnet" "private_db_a" {
 resource "aws_subnet" "private_db_b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.4.0/24"
-  availability_zone = var.availability_zone_b
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = { Name = "polltato-private-db-b-${random_id.suffix.hex}" }
 }

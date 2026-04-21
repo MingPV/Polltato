@@ -8,8 +8,8 @@ output "cloudfront_domain_name" {
 }
 
 output "frontend_ec2_public_ip" {
-  value       = aws_instance.frontend.public_ip
-  description = "Public IP of frontend EC2 (direct access blocked by SG — use CloudFront URL)"
+  value       = aws_eip.frontend.public_ip
+  description = "Public IP of frontend EC2 (Elastic IP)"
 }
 
 output "frontend_ecr_repository_url" {

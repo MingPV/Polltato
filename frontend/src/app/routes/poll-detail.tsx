@@ -16,6 +16,7 @@ import {
   useMyPolls,
 } from '@/features/polls/api/get-my-polls';
 import { getPollQueryOptions, usePoll } from '@/features/polls/api/get-poll';
+import { mergePollFromSocketEvent } from '@/features/polls/api/merge-poll-from-socket';
 import { useResetPoll } from '@/features/polls/api/reset-poll';
 import {
   Poll,
@@ -24,6 +25,10 @@ import {
 } from '@/features/polls/api/types';
 import { useUpdatePoll } from '@/features/polls/api/update-poll';
 import { useVotePoll } from '@/features/polls/api/vote-poll';
+import {
+  setStoredVoteChoiceIds,
+  voteChoiceIdsFromStorage,
+} from '@/features/polls/lib/poll-vote-storage';
 import { useUser } from '@/lib/auth';
 
 const PollDetailRoute = () => {
@@ -37,8 +42,8 @@ const PollDetailRoute = () => {
       enabled: Boolean(user.data),
     },
   });
-  const [votedOptionIds, setVotedOptionIds] = useState<Set<number>>(
-    () => new Set(),
+  const [votedOptionIds, setVotedOptionIds] = useState<Set<number>>(() =>
+    voteChoiceIdsFromStorage(pollId),
   );
   const [newOptionLabel, setNewOptionLabel] = useState('');
   const [isCopied, setIsCopied] = useState(false);
@@ -78,42 +83,41 @@ const PollDetailRoute = () => {
     if (!pollId) {
       return;
     }
+    setVotedOptionIds(voteChoiceIdsFromStorage(pollId));
+  }, [pollId]);
+
+  useEffect(() => {
+    if (!pollId) {
+      return;
+    }
+    setStoredVoteChoiceIds(pollId, votedOptionIds);
+  }, [pollId, votedOptionIds]);
+
+  useEffect(() => {
+    if (!poll?.choices?.length) {
+      return;
+    }
+    const valid = new Set(poll.choices.map((c) => c.id));
+    setVotedOptionIds((prev) => {
+      const next = new Set([...prev].filter((id) => valid.has(id)));
+      if (next.size === prev.size && [...prev].every((id) => next.has(id))) {
+        return prev;
+      }
+      return next;
+    });
+  }, [poll?.choices]);
+
+  useEffect(() => {
+    if (!pollId) {
+      return;
+    }
 
     const socket = io(env.SOCKET_URL, {
       forceNew: true,
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      upgrade: false,
     });
-    const mergeSocketPoll = (
-      current: Poll | undefined,
-      payload: PollUpdateEvent,
-    ): Poll => {
-      const choices = payload.data.choices.map((choice) => ({
-        id: choice.id,
-        choice_name: choice.choice_name,
-        number_vote: choice.number_vote,
-      }));
-      const total_votes = choices.reduce(
-        (sum, choice) => sum + choice.number_vote,
-        0,
-      );
-
-      return {
-        id: payload.data.id,
-        poll_name: payload.data.poll_name,
-        is_multi: payload.data.is_multi,
-        room_id: payload.data.room_id,
-        qrcode_url: current?.qrcode_url ?? '',
-        choices,
-        total_votes,
-        version: payload.version,
-        create_time: current?.create_time ?? new Date().toISOString(),
-        update_time: payload.data.update_time,
-      };
-    };
-
     const onConnect = () => {
       socket.emit('join-room', pollId);
     };
@@ -123,9 +127,13 @@ const PollDetailRoute = () => {
         return;
       }
 
+      if (payload.type === 'reset-poll') {
+        setVotedOptionIds(new Set());
+      }
+
       queryClient.setQueryData<Poll | undefined>(
         getPollQueryOptions(pollId).queryKey,
-        (current) => mergeSocketPoll(current, payload),
+        (current) => mergePollFromSocketEvent(current, payload),
       );
       queryClient.invalidateQueries({
         queryKey: getMyPollsQueryOptions().queryKey,
@@ -149,7 +157,7 @@ const PollDetailRoute = () => {
       socket.off('delete-poll', onDeletePoll);
       socket.disconnect();
     };
-  }, [navigate, pollId, queryClient]);
+  }, [navigate, pollId, queryClient, setVotedOptionIds]);
 
   const handleVoteToggle = (optionId: number) => {
     if (!pollId || !poll) {
@@ -341,13 +349,22 @@ const PollDetailRoute = () => {
                   </div>
                 ) : null}
 
-                <div className="mt-6 space-y-3">
+                <div
+                  className="mt-6 space-y-3"
+                  aria-busy={votePollMutation.isPending}
+                >
                   {sortedChoices.map((option) => {
                     const percentage =
                       totalVotes === 0
                         ? 0
                         : Math.round((option.number_vote / totalVotes) * 100);
                     const hasVotedThis = votedOptionIds.has(option.id);
+                    const vars = votePollMutation.variables;
+                    const isSavingThisOption =
+                      votePollMutation.isPending &&
+                      vars &&
+                      (vars.vote_choice_id.includes(option.id) ||
+                        vars.unvote_choice_id.includes(option.id));
 
                     return (
                       <div key={option.id} className="relative">
@@ -358,6 +375,10 @@ const PollDetailRoute = () => {
                             hasVotedThis
                               ? 'cursor-pointer border-[#c9b49e] bg-[#f0e6da] hover:bg-[#e8dccf]'
                               : 'border-[#dec4aa] bg-[#fff8ee] hover:bg-[#faf0e3]'
+                          } ${
+                            votePollMutation.isPending && !isSavingThisOption
+                              ? 'opacity-60'
+                              : ''
                           }`}
                           disabled={votePollMutation.isPending}
                         >

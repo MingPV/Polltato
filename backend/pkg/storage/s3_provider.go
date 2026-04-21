@@ -20,10 +20,20 @@ type S3Provider struct {
 }
 
 func NewS3Provider(bucket, region, keyID, secretKey, endpoint string) (*S3Provider, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(keyID, secretKey, "")),
-	)
+	var cfg aws.Config
+	var err error
+
+	if keyID != "" && secretKey != "" {
+		cfg, err = config.LoadDefaultConfig(context.TODO(),
+			config.WithRegion(region),
+			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(keyID, secretKey, "")),
+		)
+	} else {
+		cfg, err = config.LoadDefaultConfig(context.TODO(),
+			config.WithRegion(region),
+		)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("unable to load SDK config, %v", err)
 	}

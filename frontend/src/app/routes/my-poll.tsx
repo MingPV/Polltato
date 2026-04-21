@@ -15,6 +15,7 @@ import {
   getMyPollsQueryOptions,
   useMyPolls,
 } from '@/features/polls/api/get-my-polls';
+import { mergePollFromSocketEvent } from '@/features/polls/api/merge-poll-from-socket';
 import {
   Poll,
   PollDeleteEvent,
@@ -48,36 +49,7 @@ const MyPollRoute = () => {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      upgrade: false,
     });
-
-    const mergeSocketPoll = (
-      current: Poll | undefined,
-      payload: PollUpdateEvent,
-    ): Poll => {
-      const choices = payload.data.choices.map((choice) => ({
-        id: choice.id,
-        choice_name: choice.choice_name,
-        number_vote: choice.number_vote,
-      }));
-      const total_votes = choices.reduce(
-        (sum, choice) => sum + choice.number_vote,
-        0,
-      );
-
-      return {
-        id: payload.data.id,
-        poll_name: payload.data.poll_name,
-        is_multi: payload.data.is_multi,
-        room_id: payload.data.room_id,
-        qrcode_url: current?.qrcode_url ?? '',
-        choices,
-        total_votes,
-        version: payload.version,
-        create_time: current?.create_time ?? new Date().toISOString(),
-        update_time: payload.data.update_time,
-      };
-    };
 
     const joinAllRooms = () => {
       for (const poll of myPolls.data) {
@@ -91,7 +63,7 @@ const MyPollRoute = () => {
         (current) =>
           current?.map((poll) =>
             poll.room_id === payload.room_id
-              ? mergeSocketPoll(poll, payload)
+              ? mergePollFromSocketEvent(poll, payload)
               : poll,
           ) ?? current,
       );
